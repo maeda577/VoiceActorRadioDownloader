@@ -49,7 +49,7 @@ function save-hibiki-radio {
         $date = $program.episode.updated_at -split "[^\d]"
         $year = $date[0]
         $date = "$($date[0].Substring($date[0].Length - 2, 2)).$($date[1]).$($date[2])"
-        $track = [regex]::replace($program.episode.name, "[�O-�X]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
+        $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
         $filename = "$output_dir$($program.episode.program_name)" + $(if ($track) {"_#$track"}) + "_($date).m4a"
         if (Test-Path $filename) {
             "File already exists: $filename"
