@@ -2,9 +2,7 @@
 ############################################################################
 $DEFO_access_ids = @"
 ccsakura
-imas_cg
 Roselia
-llss
 "@ -split "\s+"
 $DEFO_output_dir = "$HOME\Music\records\"
 $DEFO_ffmpeg = "C:\Program_Free\ffmpeg\bin\ffmpeg.exe"#pathが通っているなら書く必要はない
@@ -61,7 +59,8 @@ function save-hibiki-radio {
         $access_id = 'ccsakura'
     )
     begin {
-        $processed = @()
+        $succeeded = @()
+        $failed=@()
     }
     process {
         $program = get-program-detail $access_id
@@ -79,17 +78,6 @@ function save-hibiki-radio {
             return
         }
         $playlist_url = get-playlist-url-by-id $program.episode.video.id
-        # $ffmepg_arg = "-i `"$playlist_url`" -vn -acodec copy -bsf:a aac_adtstoasc"`
-        #     + " -metadata title=`"$($program.episode.program_name)" + $(if ($track) {" #$track"}) + " ($date)`""`
-        #     + " -metadata artist=`"$($program.cast)`""`
-        #     + " -metadata album=`"$($program.episode.program_name)`""`
-        #     + " -metadata comment=`"$($program.description -replace '\s+',' ')`""`
-        #     + " -metadata genre=`"Web Radio`""`
-        #     + " -metadata year=`"$year`""`
-        #     + " -metadata date=`"$year`""`
-        #     + $(if ($track) {" -metadata track=`"$track`""})`
-        #     + " `"$filename`""
-        # #Start-Process -FilePath $ffmpeg -ArgumentList $ffmepg_arg -Wait
         $ffmepg_arg = @('-i' , "`"$playlist_url`"", "-vn" , "-acodec", "copy" , "-bsf:a" , "aac_adtstoasc",
             "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) {" #$track"}) + " ($date)`""),
             "-metadata", "artist=`"$($program.cast)`"",
@@ -101,11 +89,18 @@ function save-hibiki-radio {
             "-metadata", "track=`"$track`"",
             "`"$filename`"")
         & $ffmpeg $ffmepg_arg
-        $processed += $filename
+        if(Test-Path $filename){
+            $succeeded += $filename
+        }else{
+            $failed += $filename
+        }
     }
     end {
-        if ($processed) {
-            "Output:$processed"
+        if ($succeeded) {
+            "Succeeded: $succeeded"
+        }
+        if($failed){
+            "Failed: $failed"
         }
     }
 }
