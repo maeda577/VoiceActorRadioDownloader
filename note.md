@@ -19,6 +19,20 @@ $access_ids=@('poppin-radio','hanaso','gfonpu')
 (Invoke-WebRequest https://gist.githubusercontent.com/CannoHarito/75acd6ac09edfa93b54864bdd6b4df3e/raw/save-hibiki-radio.ps1).Content|Invoke-Expression
 ```
 とかすればいいと思う。
+
+## ダブルクリックで実行したい
+毎週実行するなら、ダブルクリックで実行したい。
+文字コードやセキュリティ設定の関係でダウンロードしたbatファイルには一手間必要。
+
+`Windows`キーに続いて`notepad`と打ち込んでメモ帳を起動。
+
+ブラウザでbatファイルの[Raw](https://gist.githubusercontent.com/CannoHarito/75acd6ac09edfa93b54864bdd6b4df3e/raw/save-hibiki-radio.bat)を表示し、`Ctrl+A`、`Ctrl+C`。
+
+メモ帳に`Ctrl+V`して`Ctrl+S`で文字コードが`ANSI`になっていること確認して`ラジオ録音.bat`などと保存。
+
+これをダブルクリックで実行できる。batファイル上部の`###`に挟まれた部分にある`$DEFO_xxx`への代入を好きなように書き換えよう。
+
+
 ## access_idの例
 ```powershell
 $res=Invoke-RestMethod https://vcms-api.hibiki-radio.jp/api/v1//programs -UserAgent $useragent -Headers $headers
