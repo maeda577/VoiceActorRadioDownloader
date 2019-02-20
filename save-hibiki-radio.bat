@@ -1,12 +1,32 @@
 @powershell/c '#'+(gc \"%~f0\"-ra)^|iex&exit/b
 ############################################################################
-$access_ids = @"
+$DEFO_access_ids = @"
 ccsakura
 imas_cg
+Roselia
+llss
 "@ -split "\s+"
-$output_dir = "$HOME\Music\records\"
-$ffmpeg = "C:\Program_Free\ffmpeg\bin\ffmpeg.exe"
+$DEFO_output_dir = "$HOME\Music\records\"
+$DEFO_ffmpeg = "C:\Program_Free\ffmpeg\bin\ffmpeg.exe"#pathが通っているなら書く必要はない
 ############################################################################
+if (!$access_ids) {
+    $access_ids = $DEFO_access_ids
+}
+if (!$ffmpeg) {
+    if (!!(Get-Command ffmpeg 2>$null)) {
+        $ffmpeg = (Get-Command ffmpeg).Definition
+    }
+    else {
+        $ffmpeg = $DEFO_ffmpeg
+    }
+}
+Write-Host $ffmpeg
+if (!$output_dir) {
+    $output_dir = $DEFO_output_dir
+}
+if (!(Test-Path $output_dir)) {
+    mkdir $output_dir
+}
 $useragent = 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0'
 $headers = @{
     'X-Requested-With' = 'XMLHttpRequest';
@@ -40,6 +60,9 @@ function save-hibiki-radio {
         [String]
         $access_id = 'ccsakura'
     )
+    begin {
+        $processed = @()
+    }
     process {
         $program = get-program-detail $access_id
         if (!$program.episode.video.id) {
@@ -56,6 +79,17 @@ function save-hibiki-radio {
             return
         }
         $playlist_url = get-playlist-url-by-id $program.episode.video.id
+        # $ffmepg_arg = "-i `"$playlist_url`" -vn -acodec copy -bsf:a aac_adtstoasc"`
+        #     + " -metadata title=`"$($program.episode.program_name)" + $(if ($track) {" #$track"}) + " ($date)`""`
+        #     + " -metadata artist=`"$($program.cast)`""`
+        #     + " -metadata album=`"$($program.episode.program_name)`""`
+        #     + " -metadata comment=`"$($program.description -replace '\s+',' ')`""`
+        #     + " -metadata genre=`"Web Radio`""`
+        #     + " -metadata year=`"$year`""`
+        #     + " -metadata date=`"$year`""`
+        #     + $(if ($track) {" -metadata track=`"$track`""})`
+        #     + " `"$filename`""
+        # #Start-Process -FilePath $ffmpeg -ArgumentList $ffmepg_arg -Wait
         $ffmepg_arg = @('-i' , "`"$playlist_url`"", "-vn" , "-acodec", "copy" , "-bsf:a" , "aac_adtstoasc",
             "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) {" #$track"}) + " ($date)`""),
             "-metadata", "artist=`"$($program.cast)`"",
@@ -67,7 +101,13 @@ function save-hibiki-radio {
             "-metadata", "track=`"$track`"",
             "`"$filename`"")
         & $ffmpeg $ffmepg_arg
-    }   
+        $processed += $filename
+    }
+    end {
+        if ($processed) {
+            "Output:$processed"
+        }
+    }
 }
 
 
