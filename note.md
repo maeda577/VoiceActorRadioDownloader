@@ -1,7 +1,7 @@
 ## とりあえず実行
 `Windows`キーに続いて`powershell`と打ち込んでpowershellを起動
 
-ffmpeg[^1]のパスが通ってないなら、
+ffmpeg<a href="#1">\*1</a>のパスが通ってないなら、
 ```powershell
 $ffmpeg='C:\Program Files\...\ffmpeg.exe'
 ```
@@ -79,4 +79,4 @@ $res|Where-Object{$_.episode_updated_at -And((get-date $_.episode_updated_at)-gt
 |workssezu|THE WORKS せず|桃井はるこ, ユカフィン|
 
 ***
-[^1]: 持ってないならぐぐれ。Chocolateyを使ってインストールするとパスが勝手に通るので便利だとか。
+<span id="1" style="font-size:small">ffmpeg: 持ってないならぐぐれ。Chocolateyを使ってインストールするとパスが勝手に通るので便利だとか。</span>
