@@ -18,7 +18,6 @@ if (!$ffmpeg) {
         $ffmpeg = $DEFO_ffmpeg
     }
 }
-Write-Host $ffmpeg
 if (!$output_dir) {
     $output_dir = $DEFO_output_dir
 }
@@ -60,7 +59,7 @@ function save-hibiki-radio {
     )
     begin {
         $succeeded = @()
-        $failed=@()
+        $failed = @()
     }
     process {
         $program = get-program-detail $access_id
@@ -89,9 +88,10 @@ function save-hibiki-radio {
             "-metadata", "track=`"$track`"",
             "`"$filename`"")
         & $ffmpeg $ffmepg_arg
-        if(Test-Path $filename){
+        if (Test-Path $filename) {
             $succeeded += $filename
-        }else{
+        }
+        else {
             $failed += $filename
         }
     }
@@ -99,11 +99,10 @@ function save-hibiki-radio {
         if ($succeeded) {
             "Succeeded: $succeeded"
         }
-        if($failed){
+        if ($failed) {
             "Failed: $failed"
         }
     }
 }
-
 
 $access_ids|save-hibiki-radio
