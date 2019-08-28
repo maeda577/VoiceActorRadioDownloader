@@ -31,9 +31,9 @@ $headers = @{
 }
 
 # 禁止文字(半角記号)
-$CannotUsedFileName = "\/:*?`"><|"
+$CannotUsedFileName = '\/:*?`"><|'
 # 禁止文字(全角記号)
-$UsedFileName = "￥／：＊？`”＞＜｜"
+$UsedFileName = '￥／：＊？`”＞＜｜'
 function get-program-detail {
     Param(
         [Parameter(ValueFromPipeline = $true)]
