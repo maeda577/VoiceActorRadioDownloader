@@ -1,8 +1,9 @@
-@powershell/c '#'+(gc \"%~f0\"-ra)^|iex&exit/b
+@powershell/c '#'+(gc \"%~f0\"-ra)^|iex&pause&exit/b
 ############################################################################
 $DEFO_access_ids = @"
 ccsakura
-Roselia
+hanaso
+priconne_re
 "@ -split "\s+"
 $DEFO_output_dir = "$HOME\Music\records\"
 $DEFO_ffmpeg = "C:\Program_Free\ffmpeg\bin\ffmpeg.exe"#pathが通っているなら書く必要はない
@@ -29,6 +30,11 @@ $headers = @{
     'X-Requested-With' = 'XMLHttpRequest';
     'Origin'           = 'https://hibiki-radio.jp'
 }
+
+# 禁止文字(半角記号)
+$CannotUsedFileName = "\/:*?`"><|"
+# 禁止文字(全角記号)
+$UsedFileName = "￥／：＊？`”＞＜｜"
 function get-program-detail {
     Param(
         [Parameter(ValueFromPipeline = $true)]
@@ -71,14 +77,16 @@ function save-hibiki-radio {
         $year = $date[0]
         $date = "$($date[0].Substring($date[0].Length - 2, 2)).$($date[1]).$($date[2])"
         $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
-        $filename = "$output_dir$($program.episode.program_name)" + $(if ($track) {"_#$track"}) + "_($date).m4a"
+        $filename = $program.episode.program_name + $(if ($track) { "_#$track" }) + "_($date).m4a"
+        $filename = [regex]::Replace($filename, "[$CannotUsedFileName]", { $UsedFileName[$CannotUsedFileName.IndexOf($args.value[0])] })
+        $filename = $output_dir + $filename
         if (Test-Path $filename) {
             "File already exists: $filename"
             return
         }
         $playlist_url = get-playlist-url-by-id $program.episode.video.id
         $ffmepg_arg = @('-i' , "`"$playlist_url`"", "-vn" , "-acodec", "copy" , "-bsf:a" , "aac_adtstoasc",
-            "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) {" #$track"}) + " ($date)`""),
+            "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) { " #$track" }) + " ($date)`""),
             "-metadata", "artist=`"$($program.cast)`"",
             "-metadata", "album=`"$($program.episode.program_name)`"",
             "-metadata", "comment=`"$($program.description -replace '\s+',' ')`"",
@@ -105,4 +113,4 @@ function save-hibiki-radio {
     }
 }
 
-$access_ids|save-hibiki-radio
+$access_ids | save-hibiki-radio
