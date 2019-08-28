@@ -1,4 +1,4 @@
-@powershell/c '#'+(gc \"%~f0\"-ra)^|iex&pause&exit/b
+@powershell/c '#'+(gc \"%~f0\"-ra)^|iex&exit/b
 ############################################################################
 $DEFO_access_ids = @"
 ccsakura
