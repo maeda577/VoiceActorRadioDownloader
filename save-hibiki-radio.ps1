@@ -72,13 +72,17 @@ function save-hibiki-radio {
             "No episodes in $access_id"
             return
         }
+        $output_sub_dir = Join-Path -Path $output_dir -ChildPath $access_id
+        if (!(Test-Path $output_sub_dir)) {
+            New-Item -Path $output_sub_dir -ItemType "Directory"
+        }
         $date = $program.episode.updated_at -split "[^\d]"
         $year = $date[0]
         $date = "$($date[0].Substring($date[0].Length - 2, 2)).$($date[1]).$($date[2])"
         $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
         $filename = $program.episode.program_name + $(if ($track) { "_#$track" }) + "_($date).m4a"
         $filename = [regex]::Replace($filename, "[$CannotUsedFileName]", { $UsedFileName[$CannotUsedFileName.IndexOf($args.value[0])] })
-        $filename = $output_dir + $filename
+        $filename = Join-Path -Path $output_sub_dir -ChildPath $filename
         if (Test-Path $filename) {
             "File already exists: $filename"
             return
