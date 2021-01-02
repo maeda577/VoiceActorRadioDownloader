@@ -76,11 +76,11 @@ function save-hibiki-radio {
         if (!(Test-Path $output_sub_dir)) {
             New-Item -Path $output_sub_dir -ItemType "Directory"
         }
-        $date = $program.episode.updated_at -split "[^\d]"
-        $year = $date[0]
-        $date = "$($date[0].Substring($date[0].Length - 2, 2)).$($date[1]).$($date[2])"
+        $date = Get-Date $program.episode.updated_at
+        $year = $date.Year
+        $dateStr = $date.ToString("yy.MM.dd")
         $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
-        $filename = $program.episode.program_name + $(if ($track) { "_#$track" }) + "_($date).m4a"
+        $filename = $program.episode.program_name + $(if ($track) { "_#$track" }) + "_($dateStr).m4a"
         $filename = [regex]::Replace($filename, "[$CannotUsedFileName]", { $UsedFileName[$CannotUsedFileName.IndexOf($args.value[0])] })
         $filename = Join-Path -Path $output_sub_dir -ChildPath $filename
         if (Test-Path $filename) {
@@ -89,7 +89,7 @@ function save-hibiki-radio {
         }
         $playlist_url = get-playlist-url-by-id $program.episode.video.id
         $ffmepg_arg = @('-i' , "`"$playlist_url`"", "-vn" , "-acodec", "copy" , "-bsf:a" , "aac_adtstoasc",
-            "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) { " #$track" }) + " ($date)`""),
+            "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) { " #$track" }) + " ($dateStr)`""),
             "-metadata", "artist=`"$($program.cast)`"",
             "-metadata", "album=`"$($program.episode.program_name)`"",
             "-metadata", "comment=`"$($program.description -replace '\s+',' ')`"",
