@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" 
+    xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title />
+        <description />
+        <itunes:image href=""/>
+        <language>ja-jp</language>
+        <itunes:category text="Leisure">
+            <itunes:category text="Animation &amp; Manga" />
+        </itunes:category>
+        <itunes:explicit>false</itunes:explicit>
+        <link />
+        <item>
+            <title />
+            <enclosure type="audio/x-m4a" />
+            <pubDate />
+            <itunes:episode />
+        </item>
+    </channel>
+</rss>

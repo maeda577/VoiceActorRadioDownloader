@@ -115,5 +115,3 @@ function save-hibiki-radio {
         }
     }
 }
-
-$access_ids | save-hibiki-radio
