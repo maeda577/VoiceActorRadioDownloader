@@ -76,7 +76,7 @@ function save-hibiki-radio {
         if (!(Test-Path $output_sub_dir)) {
             New-Item -Path $output_sub_dir -ItemType "Directory"
         }
-        $date = Get-Date $program.episode.updated_at
+        $date = [System.DateTimeOffset]::Parse($program.episode.updated_at)
         $year = $date.Year
         $dateStr = $date.ToString("yy.MM.dd")
         $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
@@ -92,7 +92,7 @@ function save-hibiki-radio {
             "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) { " #$track" }) + " ($dateStr)`""),
             "-metadata", "artist=`"$($program.cast)`"",
             "-metadata", "album=`"$($program.episode.program_name)`"",
-            "-metadata", "comment=`"$($program.description -replace '\s+',' ')`"",
+            "-metadata", "comment=`"$($date.ToString('R'))`"",
             "-metadata", "genre=`"Web Radio`"",
             "-metadata", "year=`"$year`"",
             "-metadata", "date=`"$year`"",
