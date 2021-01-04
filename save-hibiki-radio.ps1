@@ -72,7 +72,7 @@ function save-hibiki-radio {
         if (!(Test-Path $output_sub_dir)) {
             New-Item -Path $output_sub_dir -ItemType "Directory"
         }
-        $date = [System.DateTimeOffset]::Parse($program.episode.updated_at)
+        $date = [System.DateTimeOffset]::Parse($program.episode.updated_at + " +0900")
         $year = $date.Year
         $dateStr = $date.ToString("yyyyMMdd")
         $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
