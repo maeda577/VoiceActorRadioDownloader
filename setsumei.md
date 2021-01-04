@@ -26,6 +26,9 @@ wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-pr
 sudo dpkg -i packages-microsoft-prod.deb
 sudo apt update
 sudo apt install powershell
+
+# timezone直す
+sudo timedatectl set-timezone Asia/Tokyo
 ```
 
 ## インストールとタイマー起動の設定
@@ -49,7 +52,7 @@ Type = oneshot
 ExecStart = /usr/bin/pwsh /usr/local/bin/hibiki/start.ps1
 ```
 ``` shell
-# タイマー (毎日12時に実行する。放送ごとに公開時刻が違うので時刻はよしなに調整)
+# タイマー (毎日09時,12時,15時に実行する。放送ごとに公開時刻が違うので時刻はよしなに調整)
 sudo vi /etc/systemd/system/hibiki.timer
 ```
 ``` ini
@@ -57,14 +60,16 @@ sudo vi /etc/systemd/system/hibiki.timer
 Description = HiBiKi downloader timer
 
 [Timer]
-OnCalendar = *-*-* 12:00:00
+OnCalendar = *-*-* 09,12,15:00:00
 
 [Install]
 WantedBy = multi-user.target
 ```
 ``` shell
 # タイマー登録
+sudo systemctl daemon-reload
 sudo systemctl enable hibiki.timer
+sudo systemctl start hibiki.timer
 
 # テストで単発実行してみる (数分かかる)
 sudo systemctl start hibiki.service
