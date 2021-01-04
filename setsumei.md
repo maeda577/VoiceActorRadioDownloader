@@ -74,4 +74,5 @@ ls /var/www/html
 
 ## Podcastアプリからの購読
 * 各ディレクトリにfeed.rssが出来ているので、そこへのURLを指定してあげてください
-    * 例: `http://<ip_address>/<access_id>/feed.rss`
+    * `http://<ip_address or hostname>/<access_id>/feed.rss`
+    * 例: `http://podcast01.local/llss/feed.rss`
