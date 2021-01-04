@@ -30,10 +30,6 @@ $headers = @{
     'Origin'           = 'https://hibiki-radio.jp'
 }
 
-# 禁止文字(半角記号)
-$CannotUsedFileName = '\/:*?`"><|'
-# 禁止文字(全角記号)
-$UsedFileName = '￥／：＊？`”＞＜｜'
 function get-program-detail {
     Param(
         [Parameter(ValueFromPipeline = $true)]
@@ -78,10 +74,9 @@ function save-hibiki-radio {
         }
         $date = [System.DateTimeOffset]::Parse($program.episode.updated_at)
         $year = $date.Year
-        $dateStr = $date.ToString("yy.MM.dd")
+        $dateStr = $date.ToString("yyyyMMdd")
         $track = [regex]::replace($program.episode.name, "[０-９]", { $args.value[0] - 65248 -as "char" }) -replace "[^\d]", ""
-        $filename = $program.episode.program_name + $(if ($track) { "_#$track" }) + "_($dateStr).m4a"
-        $filename = [regex]::Replace($filename, "[$CannotUsedFileName]", { $UsedFileName[$CannotUsedFileName.IndexOf($args.value[0])] })
+        $filename = "$($track)_$($access_id)_$($dateStr).m4a"
         $filename = Join-Path -Path $output_sub_dir -ChildPath $filename
         if (Test-Path $filename) {
             "File already exists: $filename"

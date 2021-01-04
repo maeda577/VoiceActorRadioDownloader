@@ -36,7 +36,7 @@ function update-hibiki-radio-feed {
     )
     process {
         $output_sub_dir = Join-Path -Path $output_dir -ChildPath $access_id
-        $feed = [xml](Get-Content "$PSScriptRoot/podcast-feed-template.xml")
+        $feed = [xml](Get-Content "$PSScriptRoot/template.xml")
 
         $program = get-program-detail $access_id
 
@@ -49,7 +49,7 @@ function update-hibiki-radio-feed {
         $feed.rss.channel.description = $program.description -replace '\s+',' '
         $feed.rss.channel.link = "https://hibiki-radio.jp/description/$access_id/detail"
         $image_attribute = $feed.CreateAttribute('href')
-        $image_attribute.Value = $url_root + $access_id + '/image.jpg'
+        $image_attribute.Value = $base_url + $access_id + '/image.jpg'
         $feed.rss.channel.image.Attributes.Append($image_attribute)
 
         $itemNodeTemplate = $feed.rss.channel.item
