@@ -1,4 +1,4 @@
-$access_ids = @("llss", "llniji", "anigasaki")
+$access_ids = @("assaultlily", "llss", "llniji", "anigasaki")
 $output_dir = "/var/www/html/"
 $base_url = "http://podcast01.local/"
 #$ffmpeg = "/path/to/ffmpeg"

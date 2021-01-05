@@ -100,6 +100,27 @@ function save-hibiki-radio {
         else {
             $failed += $filename
         }
+
+        if ($program.episode.additional_video.id) {
+            $filename = "$($track)_$($access_id)_$($dateStr)_bonus.m4a"
+            $filename = Join-Path -Path $output_sub_dir -ChildPath $filename
+            if (Test-Path $filename) {
+                "File already exists: $filename"
+                return
+            }
+            $playlist_url = get-playlist-url-by-id $program.episode.additional_video.id
+            $ffmepg_arg = @('-i' , "`"$playlist_url`"", "-vn" , "-acodec", "copy" , "-bsf:a" , "aac_adtstoasc",
+                "-metadata", ("title=`"$($program.episode.program_name)" + $(if ($track) { " #$track" }) + " ($dateStr) 特典`""),
+                "-metadata", "artist=`"$($program.cast)`"",
+                "-metadata", "album=`"$($program.episode.program_name)`"",
+                "-metadata", "comment=`"$($date.ToString('R'))`"",
+                "-metadata", "genre=`"Web Radio`"",
+                "-metadata", "year=`"$year`"",
+                "-metadata", "date=`"$year`"",
+                "-metadata", "track=`"$track`"",
+                "`"$filename`"")
+            & $ffmpeg $ffmepg_arg
+        }
     }
     end {
         if ($succeeded) {

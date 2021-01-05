@@ -63,10 +63,8 @@ function update-hibiki-radio-feed {
             $metadata = Get-Content -Path $tmpFile.FullName | ConvertFrom-Json
             Remove-Item -Path $tmpFile.FullName
 
-            $date = [System.DateTimeOffset]::Parse($metadata.format.tags.comment)
-
             $itemNode = $itemNodeTemplate.Clone()
-            $itemNode.title = '#' + $metadata.format.tags.track + ' ' + $date.ToString("yyyyMMdd")
+            $itemNode.title = $metadata.format.tags.title
             $itemNode.pubDate = $metadata.format.tags.comment
             $itemNode.episode = $metadata.format.tags.track
 
