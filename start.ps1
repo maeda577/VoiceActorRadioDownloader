@@ -26,6 +26,10 @@ param (
     $FfprobePath = "ffprobe"
 )
 
+if ($HibikiAccessIds -is [string]) {
+    $HibikiAccessIds = $HibikiAccessIds.Split(",") | ForEach-Object { $_.Trim() }
+}
+
 Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
 
 $HibikiAccessIds | Save-HibikiRadio -DestinationPath $destinationPath
