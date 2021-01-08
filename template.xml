@@ -12,10 +12,12 @@
         </itunes:category>
         <itunes:explicit>false</itunes:explicit>
         <link />
+        <copyright />
         <item>
             <title />
             <enclosure type="audio/x-m4a" />
             <pubDate />
+            <description />
             <itunes:episode />
         </item>
     </channel>

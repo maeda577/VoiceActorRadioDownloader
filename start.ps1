@@ -1,11 +1,32 @@
-$access_ids = @("assaultlily", "llss", "llniji", "anigasaki")
-$output_dir = "/var/www/html/"
-$base_url = "http://podcast01.local/"
-#$ffmpeg = "/path/to/ffmpeg"
-#$ffprobe = "/path/to/ffprobe"
+[CmdletBinding()]
+param (
+    [Parameter()]
+    [String[]]
+    $HibikiAccessIds = @(),
 
-. $PSScriptRoot/save-hibiki-radio.ps1
-. $PSScriptRoot/update-hibiki-radio-feed.ps1
+    [Parameter()]
+    [String[]]
+    $OnsenDirectoryNames = @(),
 
-$access_ids | save-hibiki-radio
-$access_ids | update-hibiki-radio-feed
+    [Parameter(Mandatory=$true)]
+    [ValidateScript({Test-Path $_})]
+    [String]
+    $DestinationPath,
+
+    [Parameter()]
+    [String]
+    $PodcastBaseUrl = "http://localhost/",
+
+    [Parameter()]
+    [String]
+    $FfmpegPath = "ffmpeg",
+
+    [Parameter()]
+    [String]
+    $FfprobePath = "ffprobe"
+)
+
+Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
+
+$HibikiAccessIds | Save-HibikiRadio -DestinationPath $destinationPath
+$HibikiAccessIds | Update-HibikiRadioFeed -DestinationPath $destinationPath -PodcastBaseUrl $PodcastBaseUrl
