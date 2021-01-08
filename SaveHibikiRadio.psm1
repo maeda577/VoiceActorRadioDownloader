@@ -164,7 +164,7 @@ function Update-HibikiRadioFeed {
             # ffprobeでタグを読み取る
             $tmpFile = New-TemporaryFile
             $ffprobe_arg = @('-print_format', 'json', '-v', 'error', '-show_format', "`"$($item.FullName)`"")
-            Start-Process -FilePath $ffprobe -ArgumentList $ffprobe_arg -RedirectStandardOutput $tmpFile.FullName -Wait
+            Start-Process -FilePath $FfprobePath -ArgumentList $ffprobe_arg -RedirectStandardOutput $tmpFile.FullName -Wait
             $metadata = Get-Content -Path $tmpFile.FullName | ConvertFrom-Json
             Remove-Item -Path $tmpFile.FullName
 

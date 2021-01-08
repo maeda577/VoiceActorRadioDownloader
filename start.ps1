@@ -26,7 +26,7 @@ param (
     $FfprobePath = "ffprobe"
 )
 
-if ($HibikiAccessIds -is [string]) {
+if ($HibikiAccessIds.Length -eq 1) {
     $HibikiAccessIds = $HibikiAccessIds.Split(",") | ForEach-Object { $_.Trim() }
 }
 
