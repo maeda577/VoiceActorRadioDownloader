@@ -159,7 +159,7 @@ function Update-HibikiRadioFeed {
         $feed.rss.channel.RemoveChild($itemNodeTemplate)
 
         # 各mp4ごとにitemを作って足していく
-        $items = Get-ChildItem -Path $output_sub_dir -Filter '*.m4a'
+        $items = Get-ChildItem -Path $output_sub_dir -Filter '*.m4a' | Sort-Object -Property Name -Descending
         foreach ($item in $items) {
             # ffprobeでタグを読み取る
             $tmpFile = New-TemporaryFile
