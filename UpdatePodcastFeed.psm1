@@ -176,7 +176,7 @@ function Set-PodcastItem {
         $video_streams = $metadata.streams | Where-Object -Property codec_type -EQ "video"
         $type_atrribute = $feed.CreateAttribute('type')
         if ($video_streams) {
-            $type_atrribute.Value = "audio/x-m4v"
+            $type_atrribute.Value = "video/x-m4v"
         }
         else {
             $type_atrribute.Value = "audio/x-m4a"
