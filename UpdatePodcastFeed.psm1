@@ -148,7 +148,7 @@ function Set-PodcastItem {
     process {
         # ffprobeでタグを読み取る
         $tmpFile = New-TemporaryFile
-        $ffprobe_arg = @('-print_format', 'json', '-v', 'error', '-show_format', "`"$($item.FullName)`"")
+        $ffprobe_arg = @('-print_format', 'json', '-v', 'error', '-show_format', '-show_streams', "`"$($item.FullName)`"")
         Start-Process -FilePath $FfprobePath -ArgumentList $ffprobe_arg -RedirectStandardOutput $tmpFile.FullName -Wait > $null
         $metadata = Get-Content -Path $tmpFile.FullName | ConvertFrom-Json
         Remove-Item -Path $tmpFile.FullName > $null
@@ -171,6 +171,17 @@ function Set-PodcastItem {
         $url_attribute = $feed.CreateAttribute('url')
         $url_attribute.Value = $PodcastItemDirUrl + '/' + [System.Web.HttpUtility]::UrlEncode($item.Name)
         $itemNode.enclosure.Attributes.Append($url_attribute)
+
+        # 映像があるか
+        $video_streams = $metadata.streams | Where-Object -Property codec_type -EQ "video"
+        $type_atrribute = $feed.CreateAttribute('type')
+        if ($video_streams) {
+            $type_atrribute.Value = "audio/x-m4v"
+        }
+        else {
+            $type_atrribute.Value = "audio/x-m4a"
+        }
+        $itemNode.enclosure.Attributes.Append($type_atrribute)
 
         return $itemNode
     }
