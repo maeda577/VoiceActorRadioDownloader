@@ -1,5 +1,5 @@
 ## これは何
-響 -HiBiKi Radio Station- を保存するPowerShellである [CannoHarito/save-hibiki-radio.bat](https://gist.github.com/CannoHarito/75acd6ac09edfa93b54864bdd6b4df3e) を独自に拡張したものです。ラジオを保存しつつPodcast用のXMLを出力するので、iPhoneのPodcastアプリで聴けるようになります。
+響 -HiBiKi Radio Station- を保存するPowerShellである [CannoHarito/save-hibiki-radio.bat](https://gist.github.com/CannoHarito/75acd6ac09edfa93b54864bdd6b4df3e) を独自に拡張したものです。ラジオを保存しつつPodcast用のXMLを出力するので、iPhoneのPodcastアプリで聴けるようになります。ついでに音泉にも対応しています。
 
 ## おやくそく
 * 作成したサーバは外部に公開しないでください
@@ -9,9 +9,14 @@
     * Ubuntu20.04で検証しています。その他のディストリビューションでは不明です
     * PowerShellなのでWindowsServerでも動くと思いますが未検証です
     * どちらも無い場合はラズパイでも買いましょう
-* ダウンロードしたい放送の access_id
+* 響のダウンロードしたい放送の access_id
     * 放送のURLを開き `https://hibiki-radio.jp/description/<ここの文字列>/detail` を調べておいてください
     * 複数指定可能です
+* 音泉のダウンロードしたい放送の directory_name
+    * 放送のURLを開き `https://www.onsen.ag/program/<ここの文字列>` を調べておいてください
+    * 複数指定可能です
+* 響のaccess_idと音泉のdirectory_nameで同じものを指定すると多分うまく動きません
+    * 例：llssを両方で指定すると、同じディレクトリに2つの配信サイトのmp4が保存されrssがよく分からない感じになります
 
 ## インストール下準備
 ``` shell
@@ -35,6 +40,9 @@ sudo timedatectl set-timezone Asia/Tokyo
 * -HibikiAccessIds
     * 集めておいた響の access_id を指定。複数ある場合はカンマ区切り
     * 例： "llss,llniji,anigasaki"
+* -OnsenDirectoryNames
+    * 集めておいた音泉の directory_name を指定。複数ある場合はカンマ区切り
+    * 例： "battle,survey"
 * -DestinationPath
     * [必須]ラジオの保存先ディレクトリ。ディレクトリが存在しない場合は失敗する
     * 例： "/var/www/html/"
@@ -51,7 +59,7 @@ sudo timedatectl set-timezone Asia/Tokyo
 # スクリプト取得
 sudo git clone https://gist.github.com/28b6fa3ea05f811fbd103cb8909af001.git /usr/local/bin/hibiki
 # 準備したパラメータで実行してみてエラーが無いことを確認
-sudo pwsh /usr/local/bin/hibiki/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://192.168.1.123/"
+sudo pwsh /usr/local/bin/hibiki/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -OnsenDirectoryNames "battle,survey" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://192.168.1.123/"
 
 # タイマー用serviceを作成
 sudo vi /etc/systemd/system/hibiki.service
@@ -62,7 +70,7 @@ Description = HiBiKi downloader
 
 [Service]
 Type = oneshot
-ExecStart = /usr/bin/pwsh /usr/local/bin/hibiki/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://192.168.1.123/"
+ExecStart = /usr/bin/pwsh /usr/local/bin/hibiki/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -OnsenDirectoryNames "battle,survey" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://192.168.1.123/"
 ```
 ``` shell
 # タイマー (毎日09時,12時,15時に実行する。放送ごとに公開時刻が違うので時刻はよしなに調整)
@@ -100,4 +108,11 @@ ls /var/www/html
 ``` shell
 /usr/local/bin/hibiki
 git pull
+```
+
+## ダウンロード対象の追加
+serviceファイルを編集してdaemon-reloadしてください
+``` shell
+sudo vi /etc/systemd/system/hibiki.service
+sudo systemctl daemon-reload
 ```
