@@ -112,7 +112,7 @@ function Update-OnsenRadioFeed {
         $feed.rss.channel.RemoveChild($itemNodeTemplate)
 
         # 各mp4ごとにitemを作って足していく
-        $items = Get-ChildItem -Path $output_sub_dir -Filter '*.mp4' | Sort-Object -Property Name -Descending
+        $items = Get-ChildItem -Path $output_sub_dir | Where-Object -Property Extension -IN @(".m4a", ".mp4") | Sort-Object -Property Name -Descending
         foreach ($item in $items) {
             $itemNode = $itemNodeTemplate.Clone()
 

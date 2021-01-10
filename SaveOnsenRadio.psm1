@@ -47,6 +47,10 @@ function Save-OnsenRadio {
             # streamのURLの後ろから2つ目のセグメントがファイル名になっている
             $url_segment = $content.streaming_url -split "/"
             $filename = $url_segment[$url_segment.Length - 2]
+            # 音声のみの場合は拡張子をm4aにする(.mp4のままだとAppleのPodcastアプリが動画だと解釈してしまう)
+            if ($content.media_type -eq "sound") {
+                $filename = $filename.Split(".")[0] + ".m4a"
+            }
 
             # ffmpegの引数
             $ffmepg_arg = @(

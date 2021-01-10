@@ -77,7 +77,7 @@ function Save-HibikiRadio {
         )
 
         # ffmpegの引数(本編)を作る
-        $filename = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.video.id).mp4"
+        $filename = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.video.id).m4a"
         $ffmepg_arg_input = @(
             "-i", "`"$(Get-PlaylistUrl $program.episode.video.id)`""     #input file url
         )
@@ -95,7 +95,7 @@ function Save-HibikiRadio {
         }
  
         # ffmpegの引数(楽屋裏)を作る
-        $filename = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.additional_video.id).mp4"
+        $filename = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.additional_video.id).m4a"
         $ffmepg_arg_input = @(
             "-i", "`"$(Get-PlaylistUrl $program.episode.additional_video.id)`""     #input file url
         )
