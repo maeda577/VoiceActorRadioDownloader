@@ -160,8 +160,7 @@ function Set-PodcastItem {
 
         # 日付があれば入れる
         if ($metadata.format.tags.creation_time) {
-            $date = [System.DateTimeOffset]::Parse($metadata.format.tags.creation_time)
-            $itemNode.pubDate = $date.ToString('R')
+            $itemNode.pubDate = $metadata.format.tags.creation_time.ToString('R')
         }
 
         # enclosureの属性も埋める

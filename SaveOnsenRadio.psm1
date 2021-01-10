@@ -35,8 +35,13 @@ function Save-OnsenRadio {
             New-Item -Path $output_sub_dir -ItemType "Directory"
         }
 
-        # コメント部分
+        # 最新コメント部分
         $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
+        # 最新放送日時
+        $culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
+        $date = [System.DateTimeOffset]::ParseExact($program.current_episode.delivery_date + "+00:00", "yyyy年M月d日(ddd)zzz", $culture)
+        $year = $date.Year
+        $creation_time = $date.ToString('u')
         # 無料で視聴できる放送
         $contents = $program.contents | Where-Object -Property streaming_url -NE $null
 
@@ -51,7 +56,8 @@ function Save-OnsenRadio {
             if ($content.media_type -eq "sound") {
                 $filename = $filename.Split(".")[0] + ".m4a"
             }
-
+            # 出演者
+            $performers = $program.performers | Select-Object -ExpandProperty "name"
             # ffmpegの引数
             $ffmepg_arg = @(
                 "-i", "`"$($content.streaming_url)`""     #input file url
@@ -60,10 +66,12 @@ function Save-OnsenRadio {
                 "-acodec", "copy",          #Set the audio codec.
                 "-vcodec", "copy",          #Set the video codec.
                 "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
-                "-metadata", "artist=`"$(($program.performers + $content.guests) -join ",")`"",
+                "-metadata", "artist=`"$(($performers + $content.guests) -join ",")`"",
                 "-metadata", "album=`"$($program.program_info.title)`"",
                 "-metadata", "track=`"$track`"",
                 "-metadata", "genre=`"Web Radio`"",
+                "-metadata", "date=`"$year`"",
+                "-metadata", "creation_time=`"$creation_time`"",
                 "-metadata", "description=`"$($program.program_info.description)`"",
                 "-metadata", "comment=`"$comment`"",
                 "-metadata", "copyright=`"$($program.program_info.copyright)`"",
@@ -74,8 +82,10 @@ function Save-OnsenRadio {
             # ダウンロード実行
             Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
 
-            # コメントは最新の放送のみセット
+            # コメントと日付は最新の放送のみセット
             $comment = $null
+            $year = $null
+            $creation_time = $null
         }
     }
 }
