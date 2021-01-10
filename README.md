@@ -84,7 +84,7 @@ Description = VoiceActorRadioDownloader
 
 [Service]
 Type = oneshot
-ExecStart = /usr/bin/pwsh /usr/local/bin/VoiceActorRadioDownloader/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -OnsenDirectoryNames "battle,survey" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://192.168.1.123/"
+ExecStart = /usr/bin/pwsh /usr/local/bin/VoiceActorRadioDownloader/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -OnsenDirectoryNames "battle,survey" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://podcast01.local/"
 ```
 ``` shell
 # タイマー (毎日09時,12時,15時に実行する。放送ごとに公開時刻が違うので時刻はよしなに調整)
