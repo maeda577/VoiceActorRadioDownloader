@@ -71,7 +71,7 @@ sudo hostnamectl set-hostname podcast01
 # スクリプト取得
 sudo git clone https://github.com/maeda577/VoiceActorRadioDownloader.git /usr/local/bin/VoiceActorRadioDownloader/
 cd /usr/local/bin/VoiceActorRadioDownloader/
-git pull origin v0.1
+git pull origin v0.2
 # 準備したパラメータで実行してみてエラーが無いことを確認 (ダウンロード完了まで数分かかる)
 sudo pwsh /usr/local/bin/VoiceActorRadioDownloader/start.ps1 -HibikiAccessIds "llss,llniji,anigasaki" -OnsenDirectoryNames "battle,survey" -DestinationPath "/var/www/html/" -PodcastBaseUrl "http://podcast01.local/"
 
@@ -121,7 +121,7 @@ ls /var/www/html
 スクリプトの保存先でgit pullしてください
 ``` shell
 cd /usr/local/bin/VoiceActorRadioDownloader
-sudo git pull origin v0.2 # 現時点では存在なし
+sudo git pull origin v0.2
 ```
 
 ## ダウンロード対象の追加
