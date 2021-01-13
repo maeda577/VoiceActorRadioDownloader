@@ -50,7 +50,7 @@ function Update-HibikiRadioFeed {
         $feed.rss.channel.RemoveChild($itemNodeTemplate)
 
         # 各mp4ごとにitemを作って足していく
-        $items = Get-ChildItem -Path $output_sub_dir -Filter '*.mp4' | Sort-Object -Property Name -Descending
+        $items = Get-ChildItem -Path $output_sub_dir -Filter '*.m4a' | Sort-Object -Property Name -Descending
         foreach ($item in $items) {
             $itemNode = $itemNodeTemplate.Clone()
 
