@@ -27,7 +27,7 @@ param (
 
     [Parameter(ParameterSetName = "ConfigFile", Mandatory=$true)]
     [String]
-    $ConfigurationPath
+    $ConfigurationFilePath
 )
 
 # Ubuntu環境だとカンマ区切りの引数を指定しても自動で分割されなかったので切る
@@ -39,8 +39,8 @@ if ($OnsenDirectoryNames.Length -eq 1) {
 }
 
 # configファイルが指定されていた場合
-if ($ConfigurationPath) {
-    $config = Get-Content -Path $ConfigurationPath | ConvertFrom-Json
+if ($ConfigurationFilePath) {
+    $config = Get-Content -Path $ConfigurationFilePath | ConvertFrom-Json
     $HibikiAccessIds = $config.Hibiki.AccessIds
     $OnsenDirectoryNames = $config.Onsen.DirectoryNames
     $OnsenEmail = $config.Onsen.Email
