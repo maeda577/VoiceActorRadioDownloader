@@ -1,12 +1,54 @@
+$postHeaders = @{
+    'Access-Control-Allow-Origin' = '*';
+    'Content-Type' = 'application/json; charset=utf-8';
+    'X-Client' = 'onsen-web';
+}
+
+function Connect-OnsenPremium {
+    param (
+        [Parameter(mandatory = $true)]
+        [String]
+        $Email,
+
+        [Parameter(mandatory = $true)]
+        [String]
+        $Password
+    )
+    $postData = @{"session" = @{ "email" = $Email; "password" = $Password }} | ConvertTo-Json -Compress
+    $postDataUtf8 = [System.Text.Encoding]::UTF8.GetBytes($postData)
+    $response = Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signin" -Headers $postHeaders -Body $postDataUtf8 -SessionVariable session
+    if ($response.error) {
+        Write-Error $response.error
+        return $null
+    }elseif (!$response.premium) {
+        Write-Error "Onsen premium is not subscribed."
+        return $null
+    }
+    return $session
+}
+
+function Disconnect-OnsenPremium {
+    param (
+        [Parameter(Mandatory=$true)]
+        [Microsoft.PowerShell.Commands.WebRequestSession]
+        $Session
+    )
+    Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signout" -Headers $postHeaders -WebSession $Session
+}
+
 function Get-OnsenProgram {
     Param(
         [Parameter(mandatory = $true, ValueFromPipeline = $true)]
         [String]
-        $OnsenDirectoryName
+        $OnsenDirectoryName,
+
+        [Parameter()]
+        [Microsoft.PowerShell.Commands.WebRequestSession]
+        $Session
     )
     process {
         $url = "https://www.onsen.ag/web_api/programs/$OnsenDirectoryName"
-        return Invoke-RestMethod -Method Get -Uri $url
+        return Invoke-RestMethod -Method Get -Uri $url -WebSession $Session
     }
 }
 
@@ -23,11 +65,15 @@ function Save-OnsenRadio {
 
         [Parameter()]
         [String]
-        $FfmpegPath = "ffmpeg"
+        $FfmpegPath = "ffmpeg",
+
+        [Parameter()]
+        [Microsoft.PowerShell.Commands.WebRequestSession]
+        $Session
     )
     process {
         # 放送の詳細情報を取得
-        $program = Get-OnsenProgram -OnsenDirectoryName $OnsenDirectoryName
+        $program = Get-OnsenProgram -OnsenDirectoryName $OnsenDirectoryName -Session $Session
 
         # サブディレクトリを切る
         $output_sub_dir = Join-Path -Path $destinationPath -ChildPath $OnsenDirectoryName
@@ -35,19 +81,29 @@ function Save-OnsenRadio {
             New-Item -Path $output_sub_dir -ItemType "Directory"
         }
 
-        # 最新コメント部分
-        $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
         # 最新放送日時
         $culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
         $date = [System.DateTimeOffset]::ParseExact($program.current_episode.delivery_date + "+00:00", "yyyy年M月d日(ddd)zzz", $culture)
-        $year = $date.Year
-        $creation_time = $date.ToString('u')
-        # 無料で視聴できる放送
+        # 出演者
+        $performers = $program.performers | Select-Object -ExpandProperty "name"
+        # 視聴できる放送
         $contents = $program.contents | Where-Object -Property streaming_url -NE $null
 
         # 放送でループ
         foreach ($content in $contents) {
+            # 第〇〇回、の数字部分
             $track = (Select-String -InputObject $content.title -Pattern "[0-9]+").Matches[0].Value
+
+            # 最新放送分にはタグを入れる
+            if ($content.delivery_date -eq "$($date.Month)/$($date.Day)") {
+                $year = $date.Year
+                $creation_time = $date.ToString('u')
+                $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
+            }else {
+                $year = $null
+                $creation_time = $null
+                $comment = $null
+            }
 
             # streamのURLの後ろから2つ目のセグメントがファイル名になっている
             $url_segment = $content.streaming_url -split "/"
@@ -56,8 +112,6 @@ function Save-OnsenRadio {
             if ($content.media_type -eq "sound") {
                 $filename = $filename.Split(".")[0] + ".m4a"
             }
-            # 出演者
-            $performers = $program.performers | Select-Object -ExpandProperty "name"
             # ffmpegの引数
             $ffmepg_arg = @(
                 "-i", "`"$($content.streaming_url)`""     #input file url
@@ -81,11 +135,6 @@ function Save-OnsenRadio {
 
             # ダウンロード実行
             Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
-
-            # コメントと日付は最新の放送のみセット
-            $comment = $null
-            $year = $null
-            $creation_time = $null
         }
     }
 }

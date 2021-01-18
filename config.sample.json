@@ -1,0 +1,21 @@
+{
+    "Hibiki": {
+        "AccessIds": [
+            "llss",
+            "llniji"
+        ]
+    },
+    "Onsen": {
+        "DirectoryNames": [
+            "survey"
+        ],
+        "Email": "",
+        "Password": ""
+    },
+    "DestinationPath": "/var/www/html",
+    "PodcastBaseUrl": "http://localhost/",
+    "Ffmpeg": {
+        "FfmpegPath": "",
+        "FfprobePath": ""
+    }
+}
