@@ -39,5 +39,6 @@
 スクリプトの保存先でgit pullしてください
 ``` shell
 cd /usr/local/bin/VoiceActorRadioDownloader
-sudo git pull origin v0.3
+sudo git fetch
+sudo git checkout refs/tags/v0.3
 ```
