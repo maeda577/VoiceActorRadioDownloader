@@ -36,7 +36,7 @@
     * 例: `http://podcast01.local/llss/feed.rss`
 
 ## アップデート方法
-スクリプトの保存先でgit pullしてください
+スクリプトの保存先でgit checkoutしてください
 ``` shell
 cd /usr/local/bin/VoiceActorRadioDownloader
 sudo git fetch
