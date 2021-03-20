@@ -106,5 +106,8 @@ function Save-HibikiRadio {
 
         # ダウンロード実行
         Start-Process -FilePath $ffmpegPath -ArgumentList ($ffmepg_arg_input + $ffmepg_arg_base + $ffmepg_arg_output) -Wait
+
+        # ダウンロードがコケて0byteのデータが残っていたら消す
+        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
     }
 }
