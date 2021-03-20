@@ -136,5 +136,8 @@ function Save-OnsenRadio {
             # ダウンロード実行
             Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
         }
+
+        # ダウンロードがコケて0byteのデータが残っていたら消す
+        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
     }
 }
