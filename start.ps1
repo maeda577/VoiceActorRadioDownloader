@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param (
     [Parameter(ParameterSetName = "Arguments")]
     [String[]]
@@ -40,7 +40,7 @@ if ($OnsenDirectoryNames.Length -eq 1) {
 
 # configファイルが指定されていた場合
 if ($ConfigurationFilePath) {
-    $config = Get-Content -Path $ConfigurationFilePath | ConvertFrom-Json
+    $config = Get-Content -Path $ConfigurationFilePath -Encoding UTF8 | ConvertFrom-Json
     $HibikiAccessIds = $config.Hibiki.AccessIds
     $OnsenDirectoryNames = $config.Onsen.DirectoryNames
     $OnsenEmail = $config.Onsen.Email
