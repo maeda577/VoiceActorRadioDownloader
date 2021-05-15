@@ -28,12 +28,12 @@ function Get-PlaylistUrl {
 }
 function Save-HibikiRadio {
     Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String]
         $HibikiAccessId,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
         [String]
         $DestinationPath,
 
@@ -60,11 +60,11 @@ function Save-HibikiRadio {
         $track = (Select-String -InputObject $program.episode.name -Pattern "[0-9]+").Matches[0].Value
 
         $ffmepg_arg_base = @(
-            "-n",                       #Do not overwrite output files, and exit immediately if a specified output file already exists.
-            "-loglevel", "error",       #Show all errors, including ones which can be recovered from.
-            "-acodec", "copy",          #Set the audio codec.
+            "-n", #Do not overwrite output files, and exit immediately if a specified output file already exists.
+            "-loglevel", "error", #Show all errors, including ones which can be recovered from.
+            "-acodec", "copy", #Set the audio codec.
             "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
-            "-vn",                      #As an input option, blocks all video streams of a file from being filtered or being automatically selected or mapped for any output.
+            "-vn", #As an input option, blocks all video streams of a file from being filtered or being automatically selected or mapped for any output.
             "-metadata", "artist=`"$($program.cast)`"",
             "-metadata", "album=`"$($program.episode.program_name)`"",
             "-metadata", "track=`"$track`"",

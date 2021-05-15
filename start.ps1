@@ -1,8 +1,8 @@
 ﻿[CmdletBinding()]
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory = $true)]
     [String]
-    [ValidateScript({Test-Path $_})]
+    [ValidateScript( { Test-Path $_ })]
     $ConfigurationFilePath
 )
 
@@ -33,7 +33,7 @@ if ($config.Hibiki.AccessIds) {
 }
 
 # 音泉のダウンロードとrss生成
-if($config.Onsen.Email -and $config.Onsen.Password){
+if ($config.Onsen.Email -and $config.Onsen.Password) {
     $session = Connect-OnsenPremium -Email $config.Onsen.Email -Password $config.Onsen.Password
 }
 if ($config.Onsen.DirectoryNames) {

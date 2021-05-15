@@ -1,7 +1,7 @@
 ﻿$postHeaders = @{
     'Access-Control-Allow-Origin' = '*';
-    'Content-Type' = 'application/json; charset=utf-8';
-    'X-Client' = 'onsen-web';
+    'Content-Type'                = 'application/json; charset=utf-8';
+    'X-Client'                    = 'onsen-web';
 }
 
 function Connect-OnsenPremium {
@@ -14,13 +14,14 @@ function Connect-OnsenPremium {
         [String]
         $Password
     )
-    $postData = @{"session" = @{ "email" = $Email; "password" = $Password }} | ConvertTo-Json -Compress
+    $postData = @{"session" = @{ "email" = $Email; "password" = $Password } } | ConvertTo-Json -Compress
     $postDataUtf8 = [System.Text.Encoding]::UTF8.GetBytes($postData)
     $response = Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signin" -Headers $postHeaders -Body $postDataUtf8 -SessionVariable session
     if ($response.error) {
         Write-Error $response.error
         return $null
-    }elseif (!$response.premium) {
+    }
+    elseif (!$response.premium) {
         Write-Error "Onsen premium is not subscribed."
         return $null
     }
@@ -29,7 +30,7 @@ function Connect-OnsenPremium {
 
 function Disconnect-OnsenPremium {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [Microsoft.PowerShell.Commands.WebRequestSession]
         $Session
     )
@@ -54,12 +55,12 @@ function Get-OnsenProgram {
 
 function Save-OnsenRadio {
     Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String]
         $OnsenDirectoryName,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
         [String]
         $DestinationPath,
 
@@ -99,7 +100,8 @@ function Save-OnsenRadio {
                 $year = $date.Year
                 $creation_time = $date.ToString('u') # UTC
                 $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
-            }else {
+            }
+            else {
                 $year = $null
                 $creation_time = $null
                 $comment = $null
@@ -115,10 +117,10 @@ function Save-OnsenRadio {
             # ffmpegの引数
             $ffmepg_arg = @(
                 "-i", "`"$($content.streaming_url)`""     #input file url
-                "-n",                       #Do not overwrite output files, and exit immediately if a specified output file already exists.
-                "-loglevel", "error",       #Show all errors, including ones which can be recovered from.
-                "-acodec", "copy",          #Set the audio codec.
-                "-vcodec", "copy",          #Set the video codec.
+                "-n", #Do not overwrite output files, and exit immediately if a specified output file already exists.
+                "-loglevel", "error", #Show all errors, including ones which can be recovered from.
+                "-acodec", "copy", #Set the audio codec.
+                "-vcodec", "copy", #Set the video codec.
                 "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
                 "-metadata", "artist=`"$(($performers + $content.guests) -join ",")`"",
                 "-metadata", "album=`"$($program.program_info.title)`"",

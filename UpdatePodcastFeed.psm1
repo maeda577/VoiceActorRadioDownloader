@@ -5,12 +5,12 @@ $feed_name = "feed.rss"
 
 function Update-HibikiRadioFeed {
     Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String]
         $HibikiAccessId,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
         [String]
         $DestinationPath,
 
@@ -67,12 +67,12 @@ function Update-HibikiRadioFeed {
 
 function Update-OnsenRadioFeed {
     Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline = $true)]
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [String]
         $OnsenDirectoryName,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
         [String]
         $DestinationPath,
 
@@ -129,11 +129,11 @@ function Update-OnsenRadioFeed {
 
 function Set-PodcastItem {
     Param(
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.IO.FileInfo]
         $AudioFileInfo,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [System.Xml.XmlElement]
         $ItemNode,
 
