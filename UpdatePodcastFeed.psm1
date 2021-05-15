@@ -158,9 +158,15 @@ function Set-PodcastItem {
         $itemNode.episode = $metadata.format.tags.track
         $itemNode.description = $metadata.format.tags.comment
 
-        # 日付があれば入れる
+        # 日付があればRFC1123形式で入れる
         if ($metadata.format.tags.creation_time) {
-            $itemNode.pubDate = $metadata.format.tags.creation_time.ToString('R')
+            # PowerShell 5.1だと文字列のまま、PowerShell CoreだとDateTimeになっている
+            if ($metadata.format.tags.creation_time -is [System.String]) {
+                $itemNode.pubDate = [DateTimeOffset]::Parse($metadata.format.tags.creation_time).ToString("R")
+            }
+            else {
+                $itemNode.pubDate = $metadata.format.tags.creation_time.ToString("R")
+            }
         }
 
         # enclosureの属性も埋める
