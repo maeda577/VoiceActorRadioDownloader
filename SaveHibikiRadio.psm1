@@ -1,4 +1,4 @@
-$headers = @{
+﻿$headers = @{
     'X-Requested-With' = 'XMLHttpRequest';
 }
 $bonus_part_name = '楽屋裏'

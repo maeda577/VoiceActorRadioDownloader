@@ -1,4 +1,4 @@
-Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
+﻿Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
 Import-Module -Force $PSScriptRoot/SaveOnsenRadio.psm1
 
 $feed_name = "feed.rss"
@@ -36,7 +36,7 @@ function Update-HibikiRadioFeed {
         }
 
         # Podcast用feedを組み立てる
-        $feed = [xml](Get-Content "$PSScriptRoot/template.xml")
+        $feed = [xml](Get-Content -Path "$PSScriptRoot/template.xml" -Encoding UTF8)
         $feed.rss.channel.title = $program.episode.program_name
         $feed.rss.channel.description = $program.description.Trim()
         $feed.rss.channel.link = "https://hibiki-radio.jp/description/$HibikiAccessId/detail"
@@ -150,7 +150,7 @@ function Set-PodcastItem {
         $tmpFile = New-TemporaryFile
         $ffprobe_arg = @('-print_format', 'json', '-v', 'error', '-show_format', '-show_streams', "`"$($item.FullName)`"")
         Start-Process -FilePath $FfprobePath -ArgumentList $ffprobe_arg -RedirectStandardOutput $tmpFile.FullName -Wait > $null
-        $metadata = Get-Content -Path $tmpFile.FullName | ConvertFrom-Json
+        $metadata = Get-Content -Path $tmpFile.FullName -Encoding UTF8 | ConvertFrom-Json
         Remove-Item -Path $tmpFile.FullName > $null
 
         # テンプレを埋めていく
@@ -158,9 +158,15 @@ function Set-PodcastItem {
         $itemNode.episode = $metadata.format.tags.track
         $itemNode.description = $metadata.format.tags.comment
 
-        # 日付があれば入れる
+        # 日付があればRFC1123形式で入れる
         if ($metadata.format.tags.creation_time) {
-            $itemNode.pubDate = $metadata.format.tags.creation_time.ToString('R')
+            # PowerShell 5.1だと文字列のまま、PowerShell CoreだとDateTimeになっている
+            if ($metadata.format.tags.creation_time -is [System.String]) {
+                $itemNode.pubDate = [DateTimeOffset]::Parse($metadata.format.tags.creation_time).ToString("R")
+            }
+            else {
+                $itemNode.pubDate = $metadata.format.tags.creation_time.ToString("R")
+            }
         }
 
         # enclosureの属性も埋める

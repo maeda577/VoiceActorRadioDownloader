@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param (
     [Parameter(ParameterSetName = "Arguments")]
     [String[]]
@@ -40,7 +40,7 @@ if ($OnsenDirectoryNames.Length -eq 1) {
 
 # configファイルが指定されていた場合
 if ($ConfigurationFilePath) {
-    $config = Get-Content -Path $ConfigurationFilePath | ConvertFrom-Json
+    $config = Get-Content -Path $ConfigurationFilePath -Encoding UTF8 | ConvertFrom-Json
     $HibikiAccessIds = $config.Hibiki.AccessIds
     $OnsenDirectoryNames = $config.Onsen.DirectoryNames
     $OnsenEmail = $config.Onsen.Email
@@ -51,20 +51,27 @@ if ($ConfigurationFilePath) {
     $FfprobePath = $config.Ffmpeg.FfprobePath
 }
 
+if ($FfmpegPath -eq "") {
+    $FfmpegPath = "ffmpeg"
+}
+if ($FfprobePath -eq "") {
+    $FfprobePath = "ffprobe"
+}
+
 Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
 Import-Module -Force $PSScriptRoot/SaveOnsenRadio.psm1
 Import-Module -Force $PSScriptRoot/UpdatePodcastFeed.psm1
 
 # Hibikiのダウンロードとrss生成
-$HibikiAccessIds | Save-HibikiRadio -DestinationPath $DestinationPath
-$HibikiAccessIds | Update-HibikiRadioFeed -DestinationPath $DestinationPath -PodcastBaseUrl $PodcastBaseUrl
+$HibikiAccessIds | Save-HibikiRadio -DestinationPath $DestinationPath -FfmpegPath $FfmpegPath
+$HibikiAccessIds | Update-HibikiRadioFeed -DestinationPath $DestinationPath -PodcastBaseUrl $PodcastBaseUrl -FfprobePath $FfprobePath
 
 # 音泉のダウンロードとrss生成
 if($OnsenEmail -and $OnsenPassword){
     $session = Connect-OnsenPremium -Email $OnsenEmail -Password $OnsenPassword
 }
-$OnsenDirectoryNames | Save-OnsenRadio -DestinationPath $DestinationPath -Session $session
-$OnsenDirectoryNames | Update-OnsenRadioFeed -DestinationPath $DestinationPath -PodcastBaseUrl $PodcastBaseUrl
+$OnsenDirectoryNames | Save-OnsenRadio -DestinationPath $DestinationPath -Session $session -FfmpegPath $FfmpegPath
+$OnsenDirectoryNames | Update-OnsenRadioFeed -DestinationPath $DestinationPath -PodcastBaseUrl $PodcastBaseUrl -FfprobePath $FfprobePath
 if ($session) {
     Disconnect-OnsenPremium -Session $session
 }

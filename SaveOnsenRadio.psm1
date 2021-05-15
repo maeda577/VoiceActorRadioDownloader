@@ -1,4 +1,4 @@
-$postHeaders = @{
+﻿$postHeaders = @{
     'Access-Control-Allow-Origin' = '*';
     'Content-Type' = 'application/json; charset=utf-8';
     'X-Client' = 'onsen-web';
@@ -97,7 +97,7 @@ function Save-OnsenRadio {
             # 最新放送分にはタグを入れる
             if ($content.delivery_date -eq "$($date.Month)/$($date.Day)") {
                 $year = $date.Year
-                $creation_time = $date.ToString('u')
+                $creation_time = $date.ToString('u') # UTC
                 $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
             }else {
                 $year = $null
