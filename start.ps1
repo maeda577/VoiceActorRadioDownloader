@@ -15,15 +15,16 @@ if ((Test-Path $config.DestinationPath) -eq $false) {
 
 $FfmpegPath = $config.Ffmpeg.FfmpegPath
 if ($FfmpegPath -eq "") {
-    $FfmpegPath = $null
+    $FfmpegPath = "ffmpeg"
 }
 $FfprobePath = $config.Ffmpeg.FfprobePath
 if ($FfprobePath -eq "") {
-    $FfprobePath = $null
+    $FfprobePath = "ffprobe"
 }
 
 Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
 Import-Module -Force $PSScriptRoot/SaveOnsenRadio.psm1
+Import-Module -Force $PSScriptRoot/SaveRadiko.psm1
 Import-Module -Force $PSScriptRoot/UpdatePodcastFeed.psm1
 
 # Hibikiのダウンロードとrss生成
@@ -42,4 +43,18 @@ if ($config.Onsen.DirectoryNames) {
 }
 if ($session) {
     Disconnect-OnsenPremium -Session $session
+}
+
+# Radikoタイムフリーのダウンロードとrss生成
+if ($config.Radiko.Programs) {
+    $radiko = Connect-Radiko
+    foreach ($program in $config.Radiko.Programs) {
+        # 視聴エリア外の場合はスキップ
+        if ($program.StationId -notin $radiko.StationIds) {
+            Write-Warning -Message "Current area $($radiko.AreaId) can't listen station $($program.StationId). Skipping."
+            Continue
+        }
+
+        Save-Radiko -AuthToken $radiko.AuthToken -StationId $program.StationId -MatchTitle $program.MatchTitle -DestinationPath $config.DestinationPath -DestinationSubDir $program.LocalDirectoryName -Session $session -FfmpegPath $FfmpegPath
+    }
 }
