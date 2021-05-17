@@ -154,9 +154,15 @@ function Set-PodcastItem {
         Remove-Item -Path $tmpFile.FullName > $null
 
         # テンプレを埋めていく
-        $itemNode.title = $metadata.format.tags.title
-        $itemNode.episode = $metadata.format.tags.track
-        $itemNode.description = $metadata.format.tags.comment
+        if ($metadata.format.tags.title) {
+            $itemNode.title = $metadata.format.tags.title
+        }
+        if ($metadata.format.tags.track) {
+            $itemNode.episode = $metadata.format.tags.track
+        }
+        if ($metadata.format.tags.comment) {
+            $itemNode.description = $metadata.format.tags.comment
+        }
 
         # 日付があればRFC1123形式で入れる
         if ($metadata.format.tags.creation_time) {
