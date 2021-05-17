@@ -95,11 +95,21 @@ function Save-OnsenRadio {
             # 第〇〇回、の数字部分
             $track = (Select-String -InputObject $content.title -Pattern "[0-9]+").Matches[0].Value
 
+            # streamのURLの後ろから2つ目のセグメントがファイル名になっている
+            $url_segment = $content.streaming_url -split "/"
+            $filename = $url_segment[$url_segment.Length - 2]
+
             # 最新放送分にはタグを入れる
             if ($content.delivery_date -eq "$($date.Month)/$($date.Day)") {
                 $year = $date.Year
                 $creation_time = $date.ToString('u') # UTC
                 $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
+                # 画像もダウンロード
+                if ($program.current_episode.update_images[0].image.url) {
+                    $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($filename.Split(".")[0] + ".png")
+                    Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing
+                }
+                
             }
             else {
                 $year = $null
@@ -107,9 +117,6 @@ function Save-OnsenRadio {
                 $comment = $null
             }
 
-            # streamのURLの後ろから2つ目のセグメントがファイル名になっている
-            $url_segment = $content.streaming_url -split "/"
-            $filename = $url_segment[$url_segment.Length - 2]
             # 音声のみの場合は拡張子をm4aにする(.mp4のままだとAppleのPodcastアプリが動画だと解釈してしまう)
             if ($content.media_type -eq "sound") {
                 $filename = $filename.Split(".")[0] + ".m4a"
