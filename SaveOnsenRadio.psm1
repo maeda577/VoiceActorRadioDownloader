@@ -107,9 +107,10 @@ function Save-OnsenRadio {
                 # 画像もダウンロード
                 if ($program.current_episode.update_images[0].image.url) {
                     $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($filename.Split(".")[0] + ".png")
-                    Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing
+                    if ((Test-Path $imagePath) -eq $false) {
+                        Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing
+                    }
                 }
-                
             }
             else {
                 $year = $null

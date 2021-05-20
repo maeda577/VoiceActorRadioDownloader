@@ -55,8 +55,19 @@ function Save-HibikiRadio {
             New-Item -Path $output_sub_dir -ItemType "Directory" > $null
         }
 
-        # ffmpegの引数(共通部)を作る
+        # ファイル名(拡張子無し)
         $date = [System.DateTimeOffset]::Parse($program.episode.updated_at + " +0900")
+        $filenameMainBase = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.video.id)"
+
+        # 画像があればダウンロード
+        if ($program.episode.episode_parts[0].pc_image_url) {
+            $extension = [IO.Path]::GetExtension($program.episode.episode_parts[0].pc_image_url)
+            $imagePathMain = Join-Path -Path $output_sub_dir -ChildPath ($filenameMainBase + $extension)
+            if ((Test-Path -Path $imagePathMain) -eq $false) {
+                Invoke-WebRequest -Method Get -Uri $program.episode.episode_parts[0].pc_image_url -OutFile $imagePathMain -UseBasicParsing
+            }
+        }
+        # ffmpegの引数(共通部)を作る
         $track = (Select-String -InputObject $program.episode.name -Pattern "[0-9]+").Matches[0].Value
 
         $ffmepg_arg_base = @(
@@ -77,13 +88,12 @@ function Save-HibikiRadio {
         )
 
         # ffmpegの引数(本編)を作る
-        $filename = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.video.id).m4a"
         $ffmepg_arg_input = @(
             "-i", "`"$(Get-PlaylistUrl $program.episode.video.id)`""     #input file url
         )
         $ffmepg_arg_output = @(
             "-metadata", "title=`"$($program.episode.program_name) $($program.episode.name)`"", # タイトル
-            "`"$(Join-Path -Path $output_sub_dir -ChildPath $filename)`""   # 出力ファイルのフルパス
+            "`"$(Join-Path -Path $output_sub_dir -ChildPath ($filenameMainBase + ".m4a"))`""   # 出力ファイルのフルパス
         )
 
         # ダウンロード実行
@@ -93,15 +103,24 @@ function Save-HibikiRadio {
         if (!$program.additional_video_flg) {
             return
         }
- 
+
+        # ファイル名(楽屋裏パート 拡張子無し)
+        $filenameBonusBase = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.additional_video.id)"
+        # 画像ファイルがあればコピー
+        if ($program.episode.episode_parts[0].pc_image_url) {
+            $imagePathBonus = Join-Path -Path $output_sub_dir -ChildPath ($filenameBonusBase + $extension)
+            if ((Test-Path -Path $imagePathBonus) -eq $false) {
+                Copy-Item -Path $imagePathMain -Destination $imagePathBonus
+            }
+        }
+
         # ffmpegの引数(楽屋裏)を作る
-        $filename = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.additional_video.id).m4a"
         $ffmepg_arg_input = @(
             "-i", "`"$(Get-PlaylistUrl $program.episode.additional_video.id)`""     #input file url
         )
         $ffmepg_arg_output = @(
             "-metadata", "title=`"$($program.episode.program_name) $($program.episode.name) $bonus_part_name`"", # タイトル
-            "`"$(Join-Path -Path $output_sub_dir -ChildPath $filename)`""   # 出力ファイルのフルパス
+            "`"$(Join-Path -Path $output_sub_dir -ChildPath ($filenameBonusBase + ".m4a"))`""   # 出力ファイルのフルパス
         )
 
         # ダウンロード実行
