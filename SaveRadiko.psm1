@@ -12,6 +12,8 @@ $authKey = "bcd151073c03b352e1ef2fd66c32209da9ca0afa"
 
 $trimStr = "`0`r`n ".ToCharArray()
 
+$cultureJp = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
+
 if ($PSVersionTable.PSEdition -eq "Core") {
     $httpClient = New-Object System.Net.Http.HttpClient
 }
@@ -115,7 +117,7 @@ function Save-Radiko {
     process {
         # サブディレクトリを切る
         $output_sub_dir = Join-Path -Path $destinationPath -ChildPath $DestinationSubDir
-        if (!(Test-Path $output_sub_dir)) {
+        if ((Test-Path $output_sub_dir) -eq $false) {
             New-Item -Path $output_sub_dir -ItemType "Directory" > $null
         }
 
@@ -123,38 +125,39 @@ function Save-Radiko {
         $programUrl = "https://radiko.jp/v3/program/station/weekly/$StationId.xml"
         $programXml = [xml](Invoke-RadikoRequest($programUrl))
 
-        $dateStr = (Get-Date).ToString("yyyyMMddhhmmss")
+        $dateNowStr = (Get-Date).ToString("yyyyMMddhhmmss")
 
         $targetPrograms = $programXml.radiko.stations.station.progs |
         Select-Object -ExpandProperty prog | #放送情報が日付別に入っているのを全部フラットにする
         Where-Object -Property title -Like $MatchTitle | # タイトルで絞り込み
-        Where-Object -Property to -lt $dateStr # 放送が終わっているもの
+        Where-Object -Property to -lt $dateNowStr # 放送が終わっているもの
 
         foreach ($targetProgram in $targetPrograms) {
             # 開始時間
-            $culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
-            $startTime = [System.DateTimeOffset]::ParseExact($targetProgram.ft, "yyyyMMddHHmmss", $culture)
+            $startTime = [System.DateTimeOffset]::ParseExact($targetProgram.ft, "yyyyMMddHHmmss", $cultureJp)
 
             # ファイル名(拡張子なし)
-            $fileName = "$DestinationSubDir-$($startTime.ToString("yyyyMMdd"))-$($targetProgram.id)"
+            $fileName = "$DestinationSubDir-$($targetProgram.ft)"
             # 画像のダウンロード
             if ($targetProgram.img) {
                 $extension = [IO.Path]::GetExtension($targetProgram.img)
                 
-                $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($fileName + $extension)
-                if ((Test-Path -Path $imagePath) -eq $false) {
-                    Invoke-WebRequest -Method Get -Uri $targetProgram.img -OutFile $imagePath -UseBasicParsing
+                $imageFullPath = Join-Path -Path $output_sub_dir -ChildPath ($fileName + $extension)
+                if ((Test-Path -Path $imageFullPath) -eq $false) {
+                    Invoke-WebRequest -Method Get -Uri $targetProgram.img -OutFile $imageFullPath -UseBasicParsing
                 }
             }
 
-            # プレイリストのURL
+            # m3u8ファイルのURL
             $m3u8Url = "https://radiko.jp/v2/api/ts/playlist.m3u8?station_id=$StationId&l=15&ft=$($targetProgram.ft)&to=$($targetProgram.to)"
+
+            # 出力ファイルのフルパス
+            $fileFullPath = Join-Path -Path $output_sub_dir -ChildPath ($fileName + ".m4a")
 
             # ffmpegの引数
             $ffmepg_arg = @(
                 "-headers", "`"X-Radiko-AuthToken: $AuthToken`"",
                 "-i", $m3u8Url, #input file url
-                "-n", #Do not overwrite output files, and exit immediately if a specified output file already exists.
                 "-loglevel", "error", #Show all errors, including ones which can be recovered from.
                 "-acodec", "copy", #Set the audio codec.
                 "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
@@ -167,14 +170,16 @@ function Save-Radiko {
                 "-metadata", "description=`"$($targetProgram.info)`"",
                 "-metadata", "comment=`"$($targetProgram.desc)`"",
                 "-metadata", "title=`"$($targetProgram.title)`"", # タイトル
-                "`"$(Join-Path -Path $output_sub_dir -ChildPath ($fileName + ".m4a"))`""   # 出力ファイルのフルパス
+                "`"$fileFullPath`""   # 出力ファイルのフルパス
             )
 
             # ダウンロード実行
-            Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
+            if ((Test-Path -Path $fileFullPath) -eq $false) {
+                Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
+            }
         }
 
         # ダウンロードがコケて0byteのデータが残っていたら消す
-        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
+        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item
     }
 }
