@@ -3,6 +3,8 @@
 }
 $bonus_part_name = '楽屋裏'
 
+$culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
+
 function Get-HibikiProgram {
     Param(
         [Parameter(mandatory = $true, ValueFromPipeline = $true)]
@@ -51,82 +53,97 @@ function Save-HibikiRadio {
 
         # サブディレクトリを切る
         $output_sub_dir = Join-Path -Path $destinationPath -ChildPath $HibikiAccessId
-        if (!(Test-Path $output_sub_dir)) {
+        if ((Test-Path $output_sub_dir) -eq $false) {
             New-Item -Path $output_sub_dir -ItemType "Directory" > $null
         }
 
-        # ファイル名(拡張子無し)
-        $date = [System.DateTimeOffset]::Parse($program.episode.updated_at + " +0900")
-        $filenameMainBase = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.video.id)"
+        # ダウンロード実行
+        Save-HibikiRadioEpisode -Program $program -EpisodeDestinationPath $output_sub_dir -FfmpegPath $FfmpegPath
+
+        # 楽屋裏パートがあればダウンロード
+        if ($program.additional_video_flg) {
+            Save-HibikiRadioEpisode -Program $program -EpisodeDestinationPath $output_sub_dir -FfmpegPath $FfmpegPath -IsBonus
+        }
+
+        # ダウンロードがコケて0byteのデータが残っていたら消す
+        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
+    }
+}
+
+function Save-HibikiRadioEpisode {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [PSObject]
+        $Program,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
+        [String]
+        $EpisodeDestinationPath,
+
+        [Parameter()]
+        [String]
+        $FfmpegPath = "ffmpeg",
+
+        [switch]
+        $IsBonus
+    )
+    process {
+        # 公開日
+        $publishDate = [System.DateTimeOffset]::ParseExact($Program.episode.updated_at, "yyyy/MM/dd HH:mm:ss", $culture)
+
+        if ($IsBonus) {
+            # ファイル名(拡張子無し)
+            $filenameBase = "$HibikiAccessId-$($publishDate.ToString("yyyyMMdd"))-$($Program.episode.additional_video.id)"
+            # URL
+            $playlistUrl = Get-PlaylistUrl $Program.episode.additional_video.id
+            # タグに書き込むタイトル
+            $title = "$($Program.episode.program_name) $($Program.episode.name) $bonus_part_name"
+        }
+        else {
+            $filenameBase = "$HibikiAccessId-$($publishDate.ToString("yyyyMMdd"))-$($Program.episode.video.id)"
+            $playlistUrl = Get-PlaylistUrl $Program.episode.video.id
+            $title = "$($Program.episode.program_name) $($Program.episode.name)"
+        }
 
         # 画像があればダウンロード
-        if ($program.episode.episode_parts[0].pc_image_url) {
-            $extension = [IO.Path]::GetExtension($program.episode.episode_parts[0].pc_image_url)
-            $imagePathMain = Join-Path -Path $output_sub_dir -ChildPath ($filenameMainBase + $extension)
-            if ((Test-Path -Path $imagePathMain) -eq $false) {
-                Invoke-WebRequest -Method Get -Uri $program.episode.episode_parts[0].pc_image_url -OutFile $imagePathMain -UseBasicParsing
+        if ($Program.episode.episode_parts[0].pc_image_url) {
+            $extension = [IO.Path]::GetExtension($Program.episode.episode_parts[0].pc_image_url)
+            $imageFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath ($filenameBase + $extension)
+            if ((Test-Path -Path $imageFullPath) -eq $false) {
+                Invoke-WebRequest -Method Get -Uri $Program.episode.episode_parts[0].pc_image_url -OutFile $imageFullPath -UseBasicParsing
             }
         }
-        # ffmpegの引数(共通部)を作る
-        $track = (Select-String -InputObject $program.episode.name -Pattern "[0-9]+").Matches[0].Value
 
-        $ffmepg_arg_base = @(
-            "-n", #Do not overwrite output files, and exit immediately if a specified output file already exists.
+        # 第何回放送か
+        $track = (Select-String -InputObject $Program.episode.name -Pattern "[0-9]+").Matches[0].Value
+
+        # 出力ファイルのフルパス
+        $fileFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath ($filenameBase + ".m4a")
+
+        # ffmpegの引数を作る
+        $ffmepg_arg = @(
+            "-i", "`"$playlistUrl`"",     #input file url
             "-loglevel", "error", #Show all errors, including ones which can be recovered from.
             "-acodec", "copy", #Set the audio codec.
             "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
             "-vn", #As an input option, blocks all video streams of a file from being filtered or being automatically selected or mapped for any output.
-            "-metadata", "artist=`"$($program.cast)`"",
-            "-metadata", "album=`"$($program.episode.program_name)`"",
+            "-metadata", "artist=`"$($Program.cast)`"",
+            "-metadata", "album=`"$($Program.episode.program_name)`"",
             "-metadata", "track=`"$track`"",
             "-metadata", "genre=`"Web Radio`"",
-            "-metadata", "date=`"$($date.Year)`"",
-            "-metadata", "creation_time=`"$($date.ToString('u'))`"",
-            "-metadata", "description=`"$($program.description.Trim())`"",
-            "-metadata", "comment=`"$($program.episode.episode_parts[0].description.Trim())`"",
-            "-metadata", "copyright=`"$($program.copyright)`""
-        )
-
-        # ffmpegの引数(本編)を作る
-        $ffmepg_arg_input = @(
-            "-i", "`"$(Get-PlaylistUrl $program.episode.video.id)`""     #input file url
-        )
-        $ffmepg_arg_output = @(
-            "-metadata", "title=`"$($program.episode.program_name) $($program.episode.name)`"", # タイトル
-            "`"$(Join-Path -Path $output_sub_dir -ChildPath ($filenameMainBase + ".m4a"))`""   # 出力ファイルのフルパス
+            "-metadata", "date=`"$($publishDate.Year)`"",
+            "-metadata", "creation_time=`"$($publishDate.ToString('u'))`"",
+            "-metadata", "description=`"$($Program.description.Trim())`"",
+            "-metadata", "comment=`"$($Program.episode.episode_parts[0].description.Trim())`"",
+            "-metadata", "copyright=`"$($Program.copyright)`""
+            "-metadata", "title=`"$title`"", # タイトル
+            "`"$fileFullPath`""   # 出力ファイルのフルパス
         )
 
         # ダウンロード実行
-        Start-Process -FilePath $ffmpegPath -ArgumentList ($ffmepg_arg_input + $ffmepg_arg_base + $ffmepg_arg_output) -Wait
-
-        # 楽屋裏パートがあるか
-        if (!$program.additional_video_flg) {
-            return
+        if ((Test-Path -Path $fileFullPath) -eq $false) {
+            Start-Process -FilePath $FfmpegPath -ArgumentList $ffmepg_arg -Wait
         }
-
-        # ファイル名(楽屋裏パート 拡張子無し)
-        $filenameBonusBase = "$HibikiAccessId-$($date.ToString("yyyyMMdd"))-$($program.episode.additional_video.id)"
-        # 画像ファイルがあればコピー
-        if ($program.episode.episode_parts[0].pc_image_url) {
-            $imagePathBonus = Join-Path -Path $output_sub_dir -ChildPath ($filenameBonusBase + $extension)
-            if ((Test-Path -Path $imagePathBonus) -eq $false) {
-                Copy-Item -Path $imagePathMain -Destination $imagePathBonus
-            }
-        }
-
-        # ffmpegの引数(楽屋裏)を作る
-        $ffmepg_arg_input = @(
-            "-i", "`"$(Get-PlaylistUrl $program.episode.additional_video.id)`""     #input file url
-        )
-        $ffmepg_arg_output = @(
-            "-metadata", "title=`"$($program.episode.program_name) $($program.episode.name) $bonus_part_name`"", # タイトル
-            "`"$(Join-Path -Path $output_sub_dir -ChildPath ($filenameBonusBase + ".m4a"))`""   # 出力ファイルのフルパス
-        )
-
-        # ダウンロード実行
-        Start-Process -FilePath $ffmpegPath -ArgumentList ($ffmepg_arg_input + $ffmepg_arg_base + $ffmepg_arg_output) -Wait
-
-        # ダウンロードがコケて0byteのデータが残っていたら消す
-        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
     }
 }
