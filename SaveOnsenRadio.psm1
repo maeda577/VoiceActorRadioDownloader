@@ -4,6 +4,8 @@
     'X-Client'                    = 'onsen-web';
 }
 
+$culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
+
 function Connect-OnsenPremium {
     param (
         [Parameter(mandatory = $true)]
@@ -14,18 +16,20 @@ function Connect-OnsenPremium {
         [String]
         $Password
     )
-    $postData = @{"session" = @{ "email" = $Email; "password" = $Password } } | ConvertTo-Json -Compress
-    $postDataUtf8 = [System.Text.Encoding]::UTF8.GetBytes($postData)
-    $response = Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signin" -Headers $postHeaders -Body $postDataUtf8 -SessionVariable session
-    if ($response.error) {
-        Write-Error $response.error
-        return $null
+    process {
+        $postData = @{"session" = @{ "email" = $Email; "password" = $Password } } | ConvertTo-Json -Compress
+        $postDataUtf8 = [System.Text.Encoding]::UTF8.GetBytes($postData)
+        $response = Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signin" -Headers $postHeaders -Body $postDataUtf8 -SessionVariable session
+        if ($response.error) {
+            Write-Error $response.error
+            return $null
+        }
+        elseif (!$response.premium) {
+            Write-Error "Onsen premium is not subscribed."
+            return $null
+        }
+        return $session
     }
-    elseif (!$response.premium) {
-        Write-Error "Onsen premium is not subscribed."
-        return $null
-    }
-    return $session
 }
 
 function Disconnect-OnsenPremium {
@@ -34,7 +38,9 @@ function Disconnect-OnsenPremium {
         [Microsoft.PowerShell.Commands.WebRequestSession]
         $Session
     )
-    Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signout" -Headers $postHeaders -WebSession $Session
+    process {
+        Invoke-RestMethod -Method Post -Uri "https://www.onsen.ag/web_api/signout" -Headers $postHeaders -WebSession $Session
+    }
 }
 
 function Get-OnsenProgram {
@@ -78,76 +84,101 @@ function Save-OnsenRadio {
 
         # サブディレクトリを切る
         $output_sub_dir = Join-Path -Path $destinationPath -ChildPath $OnsenDirectoryName
-        if (!(Test-Path $output_sub_dir)) {
+        if ((Test-Path $output_sub_dir) -eq $false) {
             New-Item -Path $output_sub_dir -ItemType "Directory"
         }
 
-        # 最新放送日時
-        $culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
-        $date = [System.DateTimeOffset]::ParseExact($program.current_episode.delivery_date + "+00:00", "yyyy年M月d日(ddd)zzz", $culture)
-        # 出演者
-        $performers = $program.performers | Select-Object -ExpandProperty "name"
         # 視聴できる放送
         $contents = $program.contents | Where-Object -Property streaming_url -NE $null
 
         # 放送でループ
         foreach ($content in $contents) {
-            # 第〇〇回、の数字部分
-            $track = (Select-String -InputObject $content.title -Pattern "[0-9]+").Matches[0].Value
-
-            # streamのURLの後ろから2つ目のセグメントがファイル名になっている
-            $url_segment = $content.streaming_url -split "/"
-            $filename = $url_segment[$url_segment.Length - 2]
-
-            # 最新放送分にはタグを入れる
-            if ($content.delivery_date -eq "$($date.Month)/$($date.Day)") {
-                $year = $date.Year
-                $creation_time = $date.ToString('u') # UTC
-                $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
-                # 画像もダウンロード
-                if ($program.current_episode.update_images[0].image.url) {
-                    $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($filename.Split(".")[0] + ".png")
-                    if ((Test-Path $imagePath) -eq $false) {
-                        Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing
-                    }
-                }
-            }
-            else {
-                $year = $null
-                $creation_time = $null
-                $comment = $null
-            }
-
-            # 音声のみの場合は拡張子をm4aにする(.mp4のままだとAppleのPodcastアプリが動画だと解釈してしまう)
-            if ($content.media_type -eq "sound") {
-                $filename = $filename.Split(".")[0] + ".m4a"
-            }
-            # ffmpegの引数
-            $ffmepg_arg = @(
-                "-i", "`"$($content.streaming_url)`""     #input file url
-                "-n", #Do not overwrite output files, and exit immediately if a specified output file already exists.
-                "-loglevel", "error", #Show all errors, including ones which can be recovered from.
-                "-acodec", "copy", #Set the audio codec.
-                "-vcodec", "copy", #Set the video codec.
-                "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
-                "-metadata", "artist=`"$(($performers + $content.guests) -join ",")`"",
-                "-metadata", "album=`"$($program.program_info.title)`"",
-                "-metadata", "track=`"$track`"",
-                "-metadata", "genre=`"Web Radio`"",
-                "-metadata", "date=`"$year`"",
-                "-metadata", "creation_time=`"$creation_time`"",
-                "-metadata", "description=`"$($program.program_info.description)`"",
-                "-metadata", "comment=`"$comment`"",
-                "-metadata", "copyright=`"$($program.program_info.copyright)`"",
-                "-metadata", "title=`"$($program.program_info.title) $($content.title)`"", # タイトル
-                "`"$(Join-Path -Path $output_sub_dir -ChildPath $filename)`""   # 出力ファイルのフルパス
-            )
-
-            # ダウンロード実行
-            Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
+            Save-OnsenRadioEpisode -Content $content -EpisodeDestinationPath $output_sub_dir -FfmpegPath $FfmpegPath
         }
 
         # ダウンロードがコケて0byteのデータが残っていたら消す
         Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
+    }
+}
+
+function Save-OnsenRadioEpisode {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [PSObject]
+        $Content,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
+        [String]
+        $EpisodeDestinationPath,
+
+        [Parameter()]
+        [String]
+        $FfmpegPath = "ffmpeg"
+    )
+    process {
+        # 最新放送日時
+        $latestPublishDate = [System.DateTimeOffset]::ParseExact($program.current_episode.delivery_date + "+00:00", "yyyy年M月d日(ddd)zzz", $culture)
+        # 出演者
+        $performers = $program.performers | Select-Object -ExpandProperty "name"
+
+        # 第〇〇回、の数字部分
+        $track = (Select-String -InputObject $content.title -Pattern "[0-9]+").Matches[0].Value
+
+        # streamのURLの後ろから2つ目のセグメントがファイル名になっている
+        $url_segment = $content.streaming_url -split "/"
+        $filename = $url_segment[$url_segment.Length - 2]
+
+        # 最新放送分にはタグを入れる
+        if ($content.delivery_date -eq "$($latestPublishDate.Month)/$($latestPublishDate.Day)") {
+            $year = $latestPublishDate.Year
+            $creation_time = $latestPublishDate.ToString('u') # UTC
+            $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
+            # 画像もダウンロード
+            if ($program.current_episode.update_images[0].image.url) {
+                $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($filename.Split(".")[0] + ".png")
+                if ((Test-Path $imagePath) -eq $false) {
+                    Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing
+                }
+            }
+        }
+        else {
+            $year = $null
+            $creation_time = $null
+            $comment = $null
+        }
+
+        # 音声のみの場合は拡張子をm4aにする(.mp4のままだとAppleのPodcastアプリが動画だと解釈してしまう)
+        if ($content.media_type -eq "sound") {
+            $filename = $filename.Split(".")[0] + ".m4a"
+        }
+
+        # 出力ファイルのフルパス
+        $fileFullPath = Join-Path -Path $output_sub_dir -ChildPath $filename
+
+        # ffmpegの引数
+        $ffmepg_arg = @(
+            "-i", "`"$($content.streaming_url)`""     #input file url
+            "-loglevel", "error", #Show all errors, including ones which can be recovered from.
+            "-acodec", "copy", #Set the audio codec.
+            "-vcodec", "copy", #Set the video codec.
+            "-bsf:a" , "aac_adtstoasc", #Set bitstream filters for matching streams.
+            "-metadata", "artist=`"$(($performers + $content.guests) -join ",")`"",
+            "-metadata", "album=`"$($program.program_info.title)`"",
+            "-metadata", "track=`"$track`"",
+            "-metadata", "genre=`"Web Radio`"",
+            "-metadata", "date=`"$year`"",
+            "-metadata", "creation_time=`"$creation_time`"",
+            "-metadata", "description=`"$($program.program_info.description)`"",
+            "-metadata", "comment=`"$comment`"",
+            "-metadata", "copyright=`"$($program.program_info.copyright)`"",
+            "-metadata", "title=`"$($program.program_info.title) $($content.title)`"", # タイトル
+            "`"$fileFullPath`""   # 出力ファイルのフルパス
+        )
+
+        # ダウンロード実行
+        if ((Test-Path -Path $fileFullPath) -eq $false) {
+            Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
+        }
     }
 }
