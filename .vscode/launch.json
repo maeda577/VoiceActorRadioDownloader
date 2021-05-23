@@ -8,6 +8,14 @@
             "script": "${workspaceFolder}\\start.ps1",
             "args": ["-ConfigurationFilePath", ".\\test\\config_win.json"],
             "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "(WSL)PowerShell: Launch Script",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "${workspaceFolder}/start.ps1",
+            "args": ["-ConfigurationFilePath", "./test/config_linux.json"],
+            "cwd": "${workspaceFolder}"
         }
     ]
 }

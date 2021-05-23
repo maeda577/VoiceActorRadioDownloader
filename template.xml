@@ -5,7 +5,7 @@
     <channel>
         <title />
         <description />
-        <itunes:image href=""/>
+        <itunes:image href="" />
         <language>ja-jp</language>
         <itunes:category text="Leisure">
             <itunes:category text="Animation &amp; Manga" />
@@ -19,6 +19,7 @@
             <pubDate />
             <description />
             <itunes:episode />
+            <itunes:image href="" />
         </item>
     </channel>
 </rss>

@@ -12,6 +12,20 @@
         "Email": "",
         "Password": ""
     },
+    "Radiko": {
+        "Programs": [
+            {
+                "StationId": "QRR",
+                "MatchTitle": "*FUN'S PROJECT LAB*",
+                "LocalDirectoryName": "fpl"
+            },
+            {
+                "StationId": "LFR",
+                "MatchTitle": "オードリーのオールナイトニッポン",
+                "LocalDirectoryName": "ann_kw"
+            }
+        ]
+    },
     "DestinationPath": "/var/www/html",
     "PodcastBaseUrl": "http://localhost/",
     "Ffmpeg": {

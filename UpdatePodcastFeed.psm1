@@ -1,16 +1,16 @@
-﻿Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
-Import-Module -Force $PSScriptRoot/SaveOnsenRadio.psm1
+﻿$feed_name = "feed.rss"
 
-$feed_name = "feed.rss"
+$audioExtensions = @(".m4a", ".mp4")
+$imageExtensions = @(".jpg", ".jpeg", ".png", ".webp")
 
-function Update-HibikiRadioFeed {
-    Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline = $true)]
-        [String]
-        $HibikiAccessId,
+function Update-RadioFeed {
+    param (
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [System.IO.FileInfo]
+        $ProgramInfoJson,
 
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
         [String]
         $DestinationPath,
 
@@ -22,172 +22,118 @@ function Update-HibikiRadioFeed {
         [String]
         $FfprobePath = "ffprobe"
     )
+    begin {
+        # baseURLをオブジェクト化しておく
+        $baseUri = [Uri]::new($PodcastBaseUrl)
+    }
     process {
-        # 出力ディレクトリ
-        $output_sub_dir = Join-Path -Path $DestinationPath -ChildPath $HibikiAccessId
+        # カレントディレクトリを出力先のルートに切り替える
+        Push-Location $DestinationPath
 
-        # 放送の詳細情報を取得
-        $program = Get-HibikiProgram -HibikiAccessId $HibikiAccessId
-
-        # 画像が無ければ取得する
-        $image_path = Join-Path -Path $output_sub_dir -ChildPath 'image.jpg'
-        if (!(Test-Path $image_path)) {
-            Invoke-WebRequest -Uri $program.pc_image_url -OutFile $image_path  > $null
-        }
+        # メタ情報jsonを読み取る
+        $programInfo = Get-Content -Path $ProgramInfoJson.FullName | ConvertFrom-Json
 
         # Podcast用feedを組み立てる
         $feed = [xml](Get-Content -Path "$PSScriptRoot/template.xml" -Encoding UTF8)
-        $feed.rss.channel.title = $program.episode.program_name
-        $feed.rss.channel.description = $program.description.Trim()
-        $feed.rss.channel.link = "https://hibiki-radio.jp/description/$HibikiAccessId/detail"
-        $feed.rss.channel.copyright = $program.copyright
-        $image_attribute = $feed.CreateAttribute('href')
-        $image_attribute.Value = $PodcastBaseUrl + $HibikiAccessId + '/image.jpg'
-        $feed.rss.channel.image.Attributes.Append($image_attribute)
+
+        # チャンネル情報
+        if ($programInfo.title) {
+            $feed.rss.channel.title = $programInfo.title
+        }
+        if ($programInfo.description) {
+            $feed.rss.channel.description = $programInfo.description
+        }
+        if ($programInfo.link) {
+            $feed.rss.channel.link = $programInfo.link
+        }
+        if ($programInfo.copyright) {
+            $feed.rss.channel.copyright = $programInfo.copyright
+        }
+
+        # チャンネルのカバー画像
+        if ($programInfo.image) {
+            $imageFullPath = Join-Path -Path $ProgramInfoJson.Directory -ChildPath $programInfo.image
+            $imageAttribute = $feed.CreateAttribute('href')
+            $imageAttribute.Value = [Uri]::new($baseUri, (Resolve-Path -Path $imageFullPath -Relative)).ToString()
+            $feed.rss.channel.image.Attributes.Append($imageAttribute) > $null
+        }
 
         # 各放送ごとに作るelementのテンプレを取得しclone用に取っておく
         $itemNodeTemplate = $feed.rss.channel.item
-        $feed.rss.channel.RemoveChild($itemNodeTemplate)
+        $feed.rss.channel.RemoveChild($itemNodeTemplate) > $null
 
-        # 各mp4ごとにitemを作って足していく
-        $items = Get-ChildItem -Path $output_sub_dir -Filter '*.m4a' | Sort-Object -Property Name -Descending
+        # 放送ごとの情報
+        $items = Get-ChildItem -Path $ProgramInfoJson.Directory | Where-Object -FilterScript { $_.Extension -in $audioExtensions } | Sort-Object -Property Name -Descending
         foreach ($item in $items) {
+            # 放送用ノードをclone
             $itemNode = $itemNodeTemplate.Clone()
 
-            Set-PodcastItem -AudioFileInfo $item -ItemNode $itemNode -PodcastItemDirUrl ($PodcastBaseUrl + $HibikiAccessId) -FfprobePath $FfprobePath > $null
+            # ffprobeでタグを読み取る
+            $tmpFile = New-TemporaryFile
+            $ffprobe_arg = @('-print_format', 'json', '-v', 'error', '-show_format', '-show_streams', $item.FullName)
+            Start-Process -FilePath $FfprobePath -ArgumentList $ffprobe_arg -RedirectStandardOutput $tmpFile.FullName -Wait > $null
+            $metadata = Get-Content -Path $tmpFile.FullName -Encoding UTF8 | ConvertFrom-Json
+            Remove-Item -Path $tmpFile.FullName > $null
 
-            $feed.rss.channel.AppendChild($itemNode)
-        }
+            # テンプレを埋めていく
+            if ($metadata.format.tags.title) {
+                $itemNode.title = $metadata.format.tags.title
+            }
+            if ($metadata.format.tags.track) {
+                $itemNode.episode = $metadata.format.tags.track
+            }
+            if ($metadata.format.tags.comment) {
+                $itemNode.description = $metadata.format.tags.comment
+            }
 
-        # Podcast用feedを保存
-        $feed_path = Join-Path -Path $output_sub_dir -ChildPath $feed_name
-        $feed.Save($feed_path)
-    }
-}
+            # 放送日があればRFC1123形式で入れる
+            if ($metadata.format.tags.creation_time) {
+                # PowerShell 5.1だと文字列のまま、PowerShell CoreだとDateTimeになっている
+                if ($metadata.format.tags.creation_time -is [System.String]) {
+                    $itemNode.pubDate = [DateTimeOffset]::Parse($metadata.format.tags.creation_time).ToString("R")
+                }
+                else {
+                    $itemNode.pubDate = $metadata.format.tags.creation_time.ToString("R")
+                }
+            }
 
-function Update-OnsenRadioFeed {
-    Param(
-        [Parameter(Mandatory=$true, ValueFromPipeline = $true)]
-        [String]
-        $OnsenDirectoryName,
+            # 放送ごとのカバー画像
+            $itemNameBase = [System.IO.Path]::GetFileNameWithoutExtension($item.Name)
+            $itemImage = Get-ChildItem -Path $ProgramInfoJson.Directory -Filter "$itemNameBase*" | Where-Object -FilterScript { $_.Extension -in $imageExtensions } | Select-Object -First 1
+            if ($itemImage) {
+                $itemImageAttribute = $feed.CreateAttribute('href')
+                $itemImageAttribute.Value = [Uri]::new($baseUri, (Resolve-Path -Path $itemImage.FullName -Relative)).ToString()
+                $itemNode.image.Attributes.Append($itemImageAttribute) > $null
+            }
 
-        [Parameter(Mandatory=$true)]
-        [ValidateScript({Test-Path $_})]
-        [String]
-        $DestinationPath,
+            # enclosureの属性も埋める
+            $length_attribute = $feed.CreateAttribute('length')
+            $length_attribute.Value = $metadata.format.size
+            $itemNode.enclosure.Attributes.Append($length_attribute) > $null
+            $url_attribute = $feed.CreateAttribute('url')
+            $url_attribute.Value = [Uri]::new($baseUri, (Resolve-Path -Path $item.FullName -Relative)).ToString()
+            $itemNode.enclosure.Attributes.Append($url_attribute) > $null
 
-        [Parameter()]
-        [String]
-        $PodcastBaseUrl = "http://localhost/",
-    
-        [Parameter()]
-        [String]
-        $FfprobePath = "ffprobe"
-    )
-    process {
-        # 出力ディレクトリ
-        $output_sub_dir = Join-Path -Path $DestinationPath -ChildPath $OnsenDirectoryName
-
-        # 放送の詳細情報を取得
-        $program = Get-OnsenProgram -OnsenDirectoryName $OnsenDirectoryName
-
-        # 画像が無ければ取得する
-        $image_path = Join-Path -Path $output_sub_dir -ChildPath 'image.jpg'
-        if (!(Test-Path $image_path)) {
-            Invoke-WebRequest -Uri $program.program_info.image.url -OutFile $image_path  > $null
-        }
-
-        # Podcast用feedを組み立てる
-        $feed = [xml](Get-Content "$PSScriptRoot/template.xml")
-        $feed.rss.channel.title = $program.program_info.title
-        $feed.rss.channel.description = $program.program_info.description
-        $feed.rss.channel.link = "https://www.onsen.ag/program/$OnsenDirectoryName"
-        $feed.rss.channel.copyright = $program.program_info.copyright
-        $image_attribute = $feed.CreateAttribute('href')
-        $image_attribute.Value = $PodcastBaseUrl + $OnsenDirectoryName + '/image.jpg'
-        $feed.rss.channel.image.Attributes.Append($image_attribute)
-
-        # 各放送ごとに作るelementのテンプレを取得しclone用に取っておく
-        $itemNodeTemplate = $feed.rss.channel.item
-        $feed.rss.channel.RemoveChild($itemNodeTemplate)
-
-        # 各mp4ごとにitemを作って足していく
-        $items = Get-ChildItem -Path $output_sub_dir | Where-Object -Property Extension -IN @(".m4a", ".mp4") | Sort-Object -Property Name -Descending
-        foreach ($item in $items) {
-            $itemNode = $itemNodeTemplate.Clone()
-
-            Set-PodcastItem -AudioFileInfo $item -ItemNode $itemNode -PodcastItemDirUrl ($PodcastBaseUrl + $OnsenDirectoryName) -FfprobePath $FfprobePath > $null
-
-            $feed.rss.channel.AppendChild($itemNode)
-        }
-
-        # Podcast用feedを保存
-        $feed_path = Join-Path -Path $output_sub_dir -ChildPath $feed_name
-        $feed.Save($feed_path)
-    }
-}
-
-function Set-PodcastItem {
-    Param(
-        [Parameter(Mandatory=$true)]
-        [System.IO.FileInfo]
-        $AudioFileInfo,
-
-        [Parameter(Mandatory=$true)]
-        [System.Xml.XmlElement]
-        $ItemNode,
-
-        [Parameter()]
-        [String]
-        $PodcastItemDirUrl,
-    
-        [Parameter()]
-        [String]
-        $FfprobePath = "ffprobe"
-    )
-    process {
-        # ffprobeでタグを読み取る
-        $tmpFile = New-TemporaryFile
-        $ffprobe_arg = @('-print_format', 'json', '-v', 'error', '-show_format', '-show_streams', "`"$($item.FullName)`"")
-        Start-Process -FilePath $FfprobePath -ArgumentList $ffprobe_arg -RedirectStandardOutput $tmpFile.FullName -Wait > $null
-        $metadata = Get-Content -Path $tmpFile.FullName -Encoding UTF8 | ConvertFrom-Json
-        Remove-Item -Path $tmpFile.FullName > $null
-
-        # テンプレを埋めていく
-        $itemNode.title = $metadata.format.tags.title
-        $itemNode.episode = $metadata.format.tags.track
-        $itemNode.description = $metadata.format.tags.comment
-
-        # 日付があればRFC1123形式で入れる
-        if ($metadata.format.tags.creation_time) {
-            # PowerShell 5.1だと文字列のまま、PowerShell CoreだとDateTimeになっている
-            if ($metadata.format.tags.creation_time -is [System.String]) {
-                $itemNode.pubDate = [DateTimeOffset]::Parse($metadata.format.tags.creation_time).ToString("R")
+            # 映像があるか
+            $video_streams = $metadata.streams | Where-Object -Property codec_type -EQ "video"
+            $type_atrribute = $feed.CreateAttribute('type')
+            if ($video_streams) {
+                $type_atrribute.Value = "video/x-m4v"
             }
             else {
-                $itemNode.pubDate = $metadata.format.tags.creation_time.ToString("R")
+                $type_atrribute.Value = "audio/x-m4a"
             }
+            $itemNode.enclosure.Attributes.Append($type_atrribute) > $null
+
+            # 放送用ノードを追加
+            $feed.rss.channel.AppendChild($itemNode) > $null
         }
 
-        # enclosureの属性も埋める
-        $length_attribute = $feed.CreateAttribute('length')
-        $length_attribute.Value = $metadata.format.size
-        $itemNode.enclosure.Attributes.Append($length_attribute)
-        $url_attribute = $feed.CreateAttribute('url')
-        $url_attribute.Value = $PodcastItemDirUrl + '/' + [System.Web.HttpUtility]::UrlEncode($item.Name)
-        $itemNode.enclosure.Attributes.Append($url_attribute)
+        # Podcast用feedを保存
+        $feedPath = Join-Path -Path $ProgramInfoJson.Directory -ChildPath $feed_name
+        $feed.Save($feedPath)
 
-        # 映像があるか
-        $video_streams = $metadata.streams | Where-Object -Property codec_type -EQ "video"
-        $type_atrribute = $feed.CreateAttribute('type')
-        if ($video_streams) {
-            $type_atrribute.Value = "video/x-m4v"
-        }
-        else {
-            $type_atrribute.Value = "audio/x-m4a"
-        }
-        $itemNode.enclosure.Attributes.Append($type_atrribute)
-
-        return $itemNode
+        # カレントディレクトリを戻す
+        Pop-Location
     }
 }
