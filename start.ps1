@@ -14,11 +14,11 @@ if ((Test-Path $config.DestinationPath) -eq $false) {
 }
 
 $FfmpegPath = $config.Ffmpeg.FfmpegPath
-if ($FfmpegPath -eq "") {
+if ([System.String]::IsNullOrWhiteSpace($FfmpegPath)) {
     $FfmpegPath = "ffmpeg"
 }
 $FfprobePath = $config.Ffmpeg.FfprobePath
-if ($FfprobePath -eq "") {
+if ([System.String]::IsNullOrWhiteSpace($FfprobePath)) {
     $FfprobePath = "ffprobe"
 }
 
