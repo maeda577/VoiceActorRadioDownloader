@@ -81,3 +81,16 @@ sudo systemctl start VoiceActorRadioDownloader.timer
 # テストで単発実行してみる
 sudo systemctl start VoiceActorRadioDownloader.service
 ```
+
+## WebGUIがないと不便なのでAutoIndexする
+``` shell
+sudo vi /etc/nginx/conf.d/80-enable-autoindex.conf
+```
+``` ini
+autoindex on;
+```
+``` shell
+sudo systemctl restart nginx.service
+```
+* 対象のホストをWebブラウザで開けばファイル一覧が見られる。
+* feed.rss をポッドキャストアプリに登録すると便利

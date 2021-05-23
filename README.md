@@ -9,12 +9,14 @@
 * [インターネットラジオステーション＜音泉＞](https://www.onsen.ag)
     * v0.3からPREMIUMに対応しました
     * アカウントはメールアドレスで作成してください。ソーシャルアカウント経由のOAuthには対応しません。
+* [Radiko](https://radiko.jp/)
+    * タイムフリーのみ対応です。ライブ放送は非対応です。
+    * エリアフリーは非対応です。
 
 ## 必要なもの
-* 適当なLinuxサーバ
-    * Ubuntu20.04で検証しています。その他のディストリビューションでは不明です
-    * PowerShellなのでWindowsServerでも動くと思いますが未検証です
-    * どちらも無い場合はラズパイでも買いましょう
+* PowerShellが動作する環境。以下で検証しています
+    * Ubuntu20.04 + PowerShell Core 7.1
+    * Windows10 + PowerShell 5.1
 * 響のダウンロードしたい放送の access_id
     * 放送のURLを開き `https://hibiki-radio.jp/description/<ここの文字列>/detail` を調べておいてください
     * 複数指定可能です
@@ -23,6 +25,10 @@
     * 複数指定可能です
     * 響のaccess_idと音泉のdirectory_nameで同じものを指定すると多分うまく動きません
         * 例：llssを両方で指定すると、同じディレクトリに2つの配信サイトのmp4が保存されrssがよく分からない感じになります
+* Radikoのダウンロードしたい放送の放送局station_idとタイトル
+    * 放送のURLを開き `https://radiko.jp/#!/ts/<ここの文字列>/20210516223000` がstation_idです
+    * 合わせて放送タイトルが必要なので同じURLから確認してください。ワイルドカードでの指定も可能です
+    * 複数指定可能です
 
 ## インストール方法
 [Ubuntu 20.04 向け手順](./docs/setup_ubuntu.md)
@@ -39,5 +45,5 @@
 スクリプトの保存先でgit pullしてください
 ``` shell
 cd /usr/local/bin/VoiceActorRadioDownloader
-sudo git pull origin v0.3
+sudo git pull origin v0.5
 ```
