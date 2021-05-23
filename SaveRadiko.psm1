@@ -144,7 +144,7 @@ function Save-Radiko {
                 
                 $imageFullPath = Join-Path -Path $output_sub_dir -ChildPath ($fileName + $extension)
                 if ((Test-Path -Path $imageFullPath) -eq $false) {
-                    Invoke-WebRequest -Method Get -Uri $targetProgram.img -OutFile $imageFullPath -UseBasicParsing
+                    Invoke-WebRequest -Method Get -Uri $targetProgram.img -OutFile $imageFullPath -UseBasicParsing > $null
                 }
             }
 
@@ -181,5 +181,40 @@ function Save-Radiko {
 
         # ダウンロードがコケて0byteのデータが残っていたら消す
         Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item
+
+        # 放送情報をファイルに書き出す
+        $targetPrograms | Select-Object -Last 1 | Update-OnsenProgramInfo -EpisodeDestinationPath $output_sub_dir
+    }
+}
+
+function Update-OnsenProgramInfo {
+    Param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [PSObject]
+        $Program,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
+        [String]
+        $EpisodeDestinationPath
+    )
+    process {
+        # カバー画像のファイル名
+        $imageFileName = [IO.Path]::GetFileName($Program.img)
+
+        # カバー画像がなければダウンロード
+        $imageFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath $imageFileName
+        if ((Test-Path $imageFullPath) -eq $false) {
+            Invoke-WebRequest -Uri $Program.img -OutFile $imageFullPath > $null
+        }
+
+        $infoFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath "info.json"
+
+        @{
+            "title" = $Program.title;
+            "description" = $Program.info;
+            "image" = $imageFileName;
+            "link" = $Program.url;
+        } | ConvertTo-Json | Out-File -FilePath $infoFullPath -Encoding UTF8
     }
 }

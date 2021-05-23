@@ -27,25 +27,23 @@ Import-Module -Force $PSScriptRoot/SaveOnsenRadio.psm1
 Import-Module -Force $PSScriptRoot/SaveRadiko.psm1
 Import-Module -Force $PSScriptRoot/UpdatePodcastFeed.psm1
 
-# Hibikiのダウンロードとrss生成
+# Hibikiのダウンロード
 if ($config.Hibiki.AccessIds) {
     $config.Hibiki.AccessIds | Save-HibikiRadio -DestinationPath $config.DestinationPath -FfmpegPath $FfmpegPath
-    $config.Hibiki.AccessIds | Update-HibikiRadioFeed -DestinationPath $config.DestinationPath -PodcastBaseUrl $config.PodcastBaseUrl -FfprobePath $FfprobePath
 }
 
-# 音泉のダウンロードとrss生成
+# 音泉のダウンロード
 if ($config.Onsen.Email -and $config.Onsen.Password) {
     $session = Connect-OnsenPremium -Email $config.Onsen.Email -Password $config.Onsen.Password
 }
 if ($config.Onsen.DirectoryNames) {
     $config.Onsen.DirectoryNames | Save-OnsenRadio -DestinationPath $config.DestinationPath -Session $session -FfmpegPath $FfmpegPath
-    $config.Onsen.DirectoryNames | Update-OnsenRadioFeed -DestinationPath $config.DestinationPath -PodcastBaseUrl $config.PodcastBaseUrl -FfprobePath $FfprobePath
 }
 if ($session) {
     Disconnect-OnsenPremium -Session $session
 }
 
-# Radikoタイムフリーのダウンロードとrss生成
+# Radikoタイムフリーのダウンロード
 if ($config.Radiko.Programs) {
     $radiko = Connect-Radiko
     foreach ($program in $config.Radiko.Programs) {
@@ -58,3 +56,6 @@ if ($config.Radiko.Programs) {
         Save-Radiko -AuthToken $radiko.AuthToken -StationId $program.StationId -MatchTitle $program.MatchTitle -DestinationPath $config.DestinationPath -DestinationSubDir $program.LocalDirectoryName -Session $session -FfmpegPath $FfmpegPath
     }
 }
+
+# Podcast用RSS更新
+Get-ChildItem -Path $config.DestinationPath -Filter "info.json" -File -Recurse | Update-RadioFeed -DestinationPath $config.DestinationPath -PodcastBaseUrl $config.PodcastBaseUrl -FfprobePath $FfprobePath

@@ -5,18 +5,6 @@ $bonus_part_name = '楽屋裏'
 
 $culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
 
-function Get-HibikiProgram {
-    Param(
-        [Parameter(mandatory = $true, ValueFromPipeline = $true)]
-        [String]
-        $HibikiAccessId
-    )
-    process {
-        $url = "https://vcms-api.hibiki-radio.jp/api/v1/programs/$HibikiAccessId"
-        return Invoke-RestMethod -Method Get -Uri $url -Headers $headers
-    }
-}
-
 function Get-PlaylistUrl {
     Param(
         [Parameter(mandatory = $true, ValueFromPipeline = $true)]
@@ -28,6 +16,7 @@ function Get-PlaylistUrl {
         (Invoke-RestMethod -Method Get -Uri $url -Headers $headers).playlist_url
     }
 }
+
 function Save-HibikiRadio {
     Param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -45,14 +34,15 @@ function Save-HibikiRadio {
     )
     process {
         # 放送の詳細情報を取得
-        $program = Get-HibikiProgram -HibikiAccessId $HibikiAccessId
+        $programUrl = "https://vcms-api.hibiki-radio.jp/api/v1/programs/$HibikiAccessId"
+        $program = Invoke-RestMethod -Method Get -Uri $programUrl -Headers $headers
         if (!$program.episode.video.id) {
             Write-Error "No episodes in $HibikiAccessId"
             return
         }
 
         # サブディレクトリを切る
-        $output_sub_dir = Join-Path -Path $destinationPath -ChildPath $HibikiAccessId
+        $output_sub_dir = Join-Path -Path $DestinationPath -ChildPath $HibikiAccessId
         if ((Test-Path $output_sub_dir) -eq $false) {
             New-Item -Path $output_sub_dir -ItemType "Directory" > $null
         }
@@ -66,7 +56,10 @@ function Save-HibikiRadio {
         }
 
         # ダウンロードがコケて0byteのデータが残っていたら消す
-        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
+        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item
+
+        # 放送情報をファイルに書き出す
+        Update-HibikiProgramInfo -Program $program -EpisodeDestinationPath $output_sub_dir
     }
 }
 
@@ -111,7 +104,7 @@ function Save-HibikiRadioEpisode {
             $extension = [IO.Path]::GetExtension($Program.episode.episode_parts[0].pc_image_url)
             $imageFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath ($filenameBase + $extension)
             if ((Test-Path -Path $imageFullPath) -eq $false) {
-                Invoke-WebRequest -Method Get -Uri $Program.episode.episode_parts[0].pc_image_url -OutFile $imageFullPath -UseBasicParsing
+                Invoke-WebRequest -Method Get -Uri $Program.episode.episode_parts[0].pc_image_url -OutFile $imageFullPath -UseBasicParsing > $null
             }
         }
 
@@ -145,5 +138,38 @@ function Save-HibikiRadioEpisode {
         if ((Test-Path -Path $fileFullPath) -eq $false) {
             Start-Process -FilePath $FfmpegPath -ArgumentList $ffmepg_arg -Wait
         }
+    }
+}
+
+function Update-HibikiProgramInfo {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [PSObject]
+        $Program,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
+        [String]
+        $EpisodeDestinationPath
+    )
+    process {
+        # カバー画像のファイル名
+        $imageFileName = [IO.Path]::GetFileName($Program.pc_image_url)
+
+        # カバー画像がなければダウンロード
+        $imageFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath $imageFileName
+        if ((Test-Path $imageFullPath) -eq $false) {
+            Invoke-WebRequest -Uri $Program.pc_image_url -OutFile $imageFullPath > $null
+        }
+
+        $infoFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath "info.json"
+
+        @{
+            "title" = $Program.episode.program_name;
+            "description" = $Program.description.Trim();
+            "image" = $imageFileName;
+            "link" = "https://hibiki-radio.jp/description/$($Program.access_id)/detail";
+            "copyright" = $Program.copyright;
+        } | ConvertTo-Json | Out-File -FilePath $infoFullPath -Encoding UTF8
     }
 }

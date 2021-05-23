@@ -43,22 +43,6 @@ function Disconnect-OnsenPremium {
     }
 }
 
-function Get-OnsenProgram {
-    Param(
-        [Parameter(mandatory = $true, ValueFromPipeline = $true)]
-        [String]
-        $OnsenDirectoryName,
-
-        [Parameter()]
-        [Microsoft.PowerShell.Commands.WebRequestSession]
-        $Session
-    )
-    process {
-        $url = "https://www.onsen.ag/web_api/programs/$OnsenDirectoryName"
-        return Invoke-RestMethod -Method Get -Uri $url -WebSession $Session
-    }
-}
-
 function Save-OnsenRadio {
     Param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -80,12 +64,13 @@ function Save-OnsenRadio {
     )
     process {
         # 放送の詳細情報を取得
-        $program = Get-OnsenProgram -OnsenDirectoryName $OnsenDirectoryName -Session $Session
+        $programUrl = "https://www.onsen.ag/web_api/programs/$OnsenDirectoryName"
+        $program = Invoke-RestMethod -Method Get -Uri $programUrl -WebSession $Session
 
         # サブディレクトリを切る
         $output_sub_dir = Join-Path -Path $destinationPath -ChildPath $OnsenDirectoryName
         if ((Test-Path $output_sub_dir) -eq $false) {
-            New-Item -Path $output_sub_dir -ItemType "Directory"
+            New-Item -Path $output_sub_dir -ItemType "Directory" > $null
         }
 
         # 視聴できる放送
@@ -97,7 +82,10 @@ function Save-OnsenRadio {
         }
 
         # ダウンロードがコケて0byteのデータが残っていたら消す
-        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item    
+        Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item
+
+        # 放送情報をファイルに書き出す
+        Update-OnsenProgramInfo -Program $program -EpisodeDestinationPath $output_sub_dir
     }
 }
 
@@ -138,7 +126,7 @@ function Save-OnsenRadioEpisode {
             if ($program.current_episode.update_images[0].image.url) {
                 $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($filename.Split(".")[0] + ".png")
                 if ((Test-Path $imagePath) -eq $false) {
-                    Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing
+                    Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing > $null
                 }
             }
         }
@@ -180,5 +168,38 @@ function Save-OnsenRadioEpisode {
         if ((Test-Path -Path $fileFullPath) -eq $false) {
             Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
         }
+    }
+}
+
+function Update-OnsenProgramInfo {
+    Param(
+        [Parameter(Mandatory = $true)]
+        [PSObject]
+        $Program,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
+        [String]
+        $EpisodeDestinationPath
+    )
+    process {
+        # カバー画像のファイル名
+        $imageFileName = ($Program.program_info.image.url.Split("=") | Select-Object -Last 1) + ".webp"
+
+        # カバー画像がなければダウンロード
+        $imageFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath $imageFileName
+        if ((Test-Path $imageFullPath) -eq $false) {
+            Invoke-WebRequest -Uri $Program.program_info.image.url -OutFile $imageFullPath > $null
+        }
+
+        $infoFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath "info.json"
+
+        @{
+            "title" = $Program.program_info.title;
+            "description" = $Program.program_info.description;
+            "image" = $imageFileName;
+            "link" = "https://www.onsen.ag/program/$($Program.directory_name)";
+            "copyright" = $Program.program_info.copyright;
+        } | ConvertTo-Json | Out-File -FilePath $infoFullPath -Encoding UTF8
     }
 }
