@@ -42,8 +42,9 @@
     * 例: `http://podcast01.local/llss/feed.rss`
 
 ## アップデート方法
-スクリプトの保存先でgit pullしてください
+スクリプトの保存先でgit checkoutしてください
 ``` shell
 cd /usr/local/bin/VoiceActorRadioDownloader
-sudo git pull origin v0.5
+sudo git fetch
+sudo git checkout refs/tags/v0.5
 ```
