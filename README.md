@@ -31,7 +31,8 @@
     * 複数指定可能です
 
 ## インストール方法
-[Ubuntu 20.04 向け手順](./docs/setup_ubuntu.md)
+* [Ubuntu 20.04 向け手順](./docs/setup_ubuntu.md)
+* [Windows10 向け手順](./docs/setup_windows.md)
 
 ## 設定ファイルの作成
 [設定ファイルサンプル](./docs/conf.md)を元にうまいこと設定してください。
