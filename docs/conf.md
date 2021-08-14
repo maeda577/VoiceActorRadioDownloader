@@ -75,7 +75,7 @@
 ## パラメータ詳細(共通部)
 ### DestinationPath
 * [必須]ダウンロードしたmp4ファイルの保存先
-    * Windowsの場合の例：C:\Inetpub\wwwroot\
+    * Windowsの場合の例：C:\\Inetpub\\wwwroot\\
     * Linuxの場合の例：/var/www/html/
 * 保存先ディレクトリはあらかじめ作成しておく必要があります。無い場合はスクリプトが起動しません。
 
