@@ -183,11 +183,11 @@ function Save-Radiko {
         Get-ChildItem -Path $output_sub_dir -File | Where-Object { $_.Length -eq 0 } | Remove-Item
 
         # 放送情報をファイルに書き出す
-        $targetPrograms | Select-Object -Last 1 | Update-OnsenProgramInfo -EpisodeDestinationPath $output_sub_dir
+        $targetPrograms | Select-Object -Last 1 | Update-RadikoProgramInfo -EpisodeDestinationPath $output_sub_dir
     }
 }
 
-function Update-OnsenProgramInfo {
+function Update-RadikoProgramInfo {
     Param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
         [PSObject]
