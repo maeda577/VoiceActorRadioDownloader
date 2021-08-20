@@ -63,7 +63,7 @@ if ($config.Radiko.Programs) {
 
 # RadioTalkのダウンロード
 if ($config.RadioTalk.ProgramIds) {
-    $config.RadioTalk.ProgramIds | Save-RadioTalk -DestinationPath $config.DestinationPath -FfmpegPath $FfmpegPath
+    $config.RadioTalk.ProgramIds | Save-RadioTalk -DestinationPath $config.DestinationPath -FfmpegPath $FfmpegPath 6>&1
 }
 
 # Podcast用RSS更新
