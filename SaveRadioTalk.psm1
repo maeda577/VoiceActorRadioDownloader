@@ -50,12 +50,12 @@ function Save-RadioTalk {
                     "-metadata", "title=`"$($program.title)`"",
                     "`"$tempAudioFileFullPath`""   # 出力ファイルのフルパス
                 )
-                # ffmpeg実行
-                if ($PSCmdlet.ShouldProcess($audioFileFullPath)) {
+                if ($PSCmdlet.ShouldProcess($audioFileFullPath, "Update")) {
+                    # ffmpeg実行
                     Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepgArgs -Wait
+                    # タグ付きファイルを元ファイルに上書きする
+                    Move-Item -Path $tempAudioFileFullPath -Destination $audioFileFullPath -Force
                 }
-                # タグ付きファイルを元ファイルに上書きする
-                Move-Item -Path $tempAudioFileFullPath -Destination $audioFileFullPath -Force -WhatIf:$WhatIfPreference
             }
 
             # 画像ファイルのファイル名とフルパス
