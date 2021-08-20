@@ -1,10 +1,12 @@
-﻿[CmdletBinding()]
+﻿[CmdletBinding(SupportsShouldProcess)]
 param (
     [Parameter(Mandatory = $true)]
     [String]
     [ValidateScript( { Test-Path $_ })]
     $ConfigurationFilePath
 )
+
+$ErrorActionPreference = "Stop"
 
 # config読み取り
 $config = Get-Content -Path $ConfigurationFilePath -Encoding UTF8 | ConvertFrom-Json
@@ -22,9 +24,11 @@ if ([System.String]::IsNullOrWhiteSpace($FfprobePath)) {
     $FfprobePath = "ffprobe"
 }
 
+Import-Module -Force $PSScriptRoot/common.psm1
 Import-Module -Force $PSScriptRoot/SaveHibikiRadio.psm1
 Import-Module -Force $PSScriptRoot/SaveOnsenRadio.psm1
 Import-Module -Force $PSScriptRoot/SaveRadiko.psm1
+Import-Module -Force $PSScriptRoot/SaveRadioTalk.psm1
 Import-Module -Force $PSScriptRoot/UpdatePodcastFeed.psm1
 
 # Hibikiのダウンロード
@@ -55,6 +59,11 @@ if ($config.Radiko.Programs) {
 
         Save-Radiko -AuthToken $radiko.AuthToken -StationId $program.StationId -MatchTitle $program.MatchTitle -DestinationPath $config.DestinationPath -DestinationSubDir $program.LocalDirectoryName -Session $session -FfmpegPath $FfmpegPath
     }
+}
+
+# RadioTalkのダウンロード
+if ($config.RadioTalk.ProgramIds) {
+    $config.RadioTalk.ProgramIds | Save-RadioTalk -DestinationPath $config.DestinationPath -FfmpegPath $FfmpegPath 6>&1
 }
 
 # Podcast用RSS更新

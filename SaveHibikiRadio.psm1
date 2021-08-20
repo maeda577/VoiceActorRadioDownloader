@@ -127,8 +127,8 @@ function Save-HibikiRadioEpisode {
             "-metadata", "genre=`"Web Radio`"",
             "-metadata", "date=`"$($publishDate.Year)`"",
             "-metadata", "creation_time=`"$($publishDate.ToString('u'))`"",
-            "-metadata", "description=`"$($Program.description.Trim())`"",
-            "-metadata", "comment=`"$($Program.episode.episode_parts[0].description.Trim())`"",
+            "-metadata", "description=`"$($Program.description)`"",
+            "-metadata", "comment=`"$($Program.episode.episode_parts[0].description)`"",
             "-metadata", "copyright=`"$($Program.copyright)`""
             "-metadata", "title=`"$title`"", # タイトル
             "`"$fileFullPath`""   # 出力ファイルのフルパス
@@ -166,7 +166,7 @@ function Update-HibikiProgramInfo {
 
         @{
             "title" = $Program.episode.program_name;
-            "description" = $Program.description.Trim();
+            "description" = $Program.description;
             "image" = $imageFileName;
             "link" = "https://hibiki-radio.jp/description/$($Program.access_id)/detail";
             "copyright" = $Program.copyright;
