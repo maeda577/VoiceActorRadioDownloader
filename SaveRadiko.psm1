@@ -141,7 +141,7 @@ function Save-Radiko {
             # 画像のダウンロード
             if ($targetProgram.img) {
                 $extension = [IO.Path]::GetExtension($targetProgram.img)
-                
+
                 $imageFullPath = Join-Path -Path $output_sub_dir -ChildPath ($fileName + $extension)
                 if ((Test-Path -Path $imageFullPath) -eq $false) {
                     Invoke-WebRequest -Method Get -Uri $targetProgram.img -OutFile $imageFullPath -UseBasicParsing > $null

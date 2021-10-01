@@ -17,7 +17,7 @@ function Update-RadioFeed {
         [Parameter()]
         [String]
         $PodcastBaseUrl = "http://localhost/",
-    
+
         [Parameter()]
         [String]
         $FfprobePath = "ffprobe"
