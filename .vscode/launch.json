@@ -10,7 +10,7 @@
             "cwd": "${workspaceFolder}"
         },
         {
-            "name": "(WSL)PowerShell: Launch Script",
+            "name": "(Linux)PowerShell: Launch Script",
             "type": "PowerShell",
             "request": "launch",
             "script": "${workspaceFolder}/start.ps1",

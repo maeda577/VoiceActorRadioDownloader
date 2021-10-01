@@ -1,0 +1,7 @@
+{
+    "name": "PowerShell",
+    "image": "mcr.microsoft.com/powershell:latest",
+
+    "extensions": [ "ms-vscode.powershell", "EditorConfig.EditorConfig" ],
+    "postCreateCommand": "apt update && apt --yes install git"
+}
