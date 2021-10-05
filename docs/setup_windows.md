@@ -40,10 +40,10 @@ $confFullPath = (Resolve-Path ./config.json).Path
 # 毎日13時に実行
 $trigger = New-ScheduledTaskTrigger -Daily -At 13:00
 # 実行するコマンド
-$action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-ExecutionPolicy Unrestricted $fullPath -ConfigurationFilePath $confFullPath"
+$action = New-ScheduledTaskAction -Execute powershell.exe -Argument "-ExecutionPolicy Unrestricted $ps1FullPath -ConfigurationFilePath $confFullPath"
 # タスクスケジューラに登録
 Register-ScheduledTask -TaskName "VoiceActorRadioDownloader" -Trigger $trigger -Action $action -User $env:UserName -Password "パスワード文字列" -Force
 
 # 1回手動で実行してみる
-Start-ScheduledTask -TaskName "VoiceActorRadioDownloader" 
+Start-ScheduledTask -TaskName "VoiceActorRadioDownloader"
 ```
