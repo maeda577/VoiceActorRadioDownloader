@@ -1,4 +1,5 @@
-﻿$headers = @{
+﻿Import-Module -Force -Name $PSScriptRoot/Common.psm1
+$headers = @{
     'X-Requested-With' = 'XMLHttpRequest';
 }
 $bonus_part_name = '楽屋裏'

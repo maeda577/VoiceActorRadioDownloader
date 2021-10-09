@@ -6,7 +6,6 @@ param (
     $ConfigurationFilePath
 )
 
-Get-ChildItem -Path $PSScriptRoot/modules/ -Filter *.psm1 |
-    ForEach-Object -Process { Import-Module -Force -Name $_.FullName }
+Import-Module -Force -Name $PSScriptRoot/modules/VoiceActorRadioDownloader.psd1
 
 Start-VoiceActorRadioDownloader -ConfigurationFilePath $ConfigurationFilePath -ErrorAction Stop -WhatIf:$WhatIfPreference

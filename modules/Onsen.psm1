@@ -1,4 +1,5 @@
-﻿$postHeaders = @{
+﻿Import-Module -Force -Name $PSScriptRoot/Common.psm1
+$postHeaders = @{
     'Access-Control-Allow-Origin' = '*';
     'Content-Type'                = 'application/json; charset=utf-8';
     'X-Client'                    = 'onsen-web';

@@ -1,4 +1,5 @@
-﻿$cultureJp = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
+﻿Import-Module -Force -Name $PSScriptRoot/Common.psm1
+$cultureJp = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
 
 function Save-RadioTalk {
     [CmdletBinding(SupportsShouldProcess)]

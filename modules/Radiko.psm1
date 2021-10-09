@@ -1,4 +1,5 @@
-﻿$headersAuth1 = @{
+﻿Import-Module -Force -Name $PSScriptRoot/Common.psm1
+$headersAuth1 = @{
     'X-Radiko-App'         = 'pc_html5';
     'X-Radiko-App-Version' = '0.0.1';
     'X-Radiko-User'        = 'dummy_user';
