@@ -5,8 +5,6 @@ $postHeaders = @{
     'X-Client'                    = 'onsen-web';
 }
 
-$culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
-
 function Connect-OnsenPremium {
     param (
         [Parameter(mandatory = $true)]
@@ -107,7 +105,7 @@ function Save-OnsenRadioEpisode {
     )
     process {
         # 最新放送日時
-        $latestPublishDate = [System.DateTimeOffset]::ParseExact($program.current_episode.delivery_date + "+00:00", "yyyy年M月d日(ddd)zzz", $culture)
+        $latestPublishDate = [System.DateTimeOffset]::ParseExact($program.current_episode.delivery_date + "+00:00", "yyyy年M月d日(ddd)zzz", ([Globalization.CultureInfo]::GetCultureInfo("ja-jp")))
         # 出演者
         $performers = $program.performers | Select-Object -ExpandProperty "name"
 

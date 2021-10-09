@@ -13,8 +13,6 @@ $authKey = "bcd151073c03b352e1ef2fd66c32209da9ca0afa"
 
 $trimStr = "`0`r`n ".ToCharArray()
 
-$cultureJp = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
-
 if ($PSVersionTable.PSEdition -eq "Core") {
     $httpClient = New-Object System.Net.Http.HttpClient
 }
@@ -135,7 +133,7 @@ function Save-Radiko {
 
         foreach ($targetProgram in $targetPrograms) {
             # 開始時間
-            $startTime = [System.DateTimeOffset]::ParseExact($targetProgram.ft, "yyyyMMddHHmmss", $cultureJp)
+            $startTime = [System.DateTimeOffset]::ParseExact($targetProgram.ft, "yyyyMMddHHmmss", ([Globalization.CultureInfo]::GetCultureInfo("ja-jp")))
 
             # ファイル名(拡張子なし)
             $fileName = "$DestinationSubDir-$($targetProgram.ft)"

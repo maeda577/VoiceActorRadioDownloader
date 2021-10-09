@@ -1,5 +1,4 @@
 ﻿Import-Module -Force -Name $PSScriptRoot/Common.psm1
-$cultureJp = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
 
 function Save-RadioTalk {
     [CmdletBinding(SupportsShouldProcess)]
@@ -34,7 +33,7 @@ function Save-RadioTalk {
             # タグ付与
             if ($isAudioDownloaded) {
                 # 日付をパース
-                $createdAt = [System.DateTimeOffset]::ParseExact($program.createdAt, "yyyy-MM-dd HH:mm:ss", $cultureJp)
+                $createdAt = [System.DateTimeOffset]::ParseExact($program.createdAt, "yyyy-MM-dd HH:mm:ss", ([Globalization.CultureInfo]::GetCultureInfo("ja-jp")))
                 # タグ書き込み後のオーディオファイルを置く一時ファイル
                 $tempAudioFileFullPath = Join-Path -Path $outputSubDir.FullName -ChildPath "temp_$audioFileName"
                 # ffmpegの引数
