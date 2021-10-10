@@ -7,6 +7,7 @@ LABEL Description="VoiceActorRadioDownloader" Version="$VARD_VERSION"
 
 # スクリプトをダウンロードし$PSHOME/Modulesに入れる
 RUN pwsh -Command "\
+    Set-Variable -Name ErrorActionPreference -Value Stop ;\
     Set-Variable -Name tmpDir -Value (Join-Path -Path ([IO.Path]::GetTempPath()) -ChildPath vard) ;\
     New-Item -Path \$tmpDir -ItemType Directory ;\
     Set-Variable -Name tmpZip -Value (Join-Path -Path \$tmpDir -ChildPath vard.zip) ;\
