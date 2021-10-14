@@ -1,13 +1,10 @@
 {
     "name": "PowerShell",
-    "dockerFile": "../docker/Dockerfile",
-    "build": {
-        "args": {
-            "REFS_TARGET": "heads",
-            "VARD_VERSION": "develop"
-        }
-    },
+    "image": "mcr.microsoft.com/powershell:latest",
 
-    "extensions": [ "ms-vscode.powershell", "EditorConfig.EditorConfig" ],
+    "extensions": [
+        "ms-vscode.powershell",
+        "EditorConfig.EditorConfig"
+    ],
     "postCreateCommand": "apt update && apt --yes install git ffmpeg"
 }
