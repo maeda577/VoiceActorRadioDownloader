@@ -1,7 +1,9 @@
 {
     "name": "PowerShell",
     "image": "mcr.microsoft.com/powershell:latest",
-
+    "containerEnv": {
+        "TZ": "Asia/Tokyo"
+    },
     "extensions": [
         "ms-vscode.powershell",
         "EditorConfig.EditorConfig"
