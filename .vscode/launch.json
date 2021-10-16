@@ -14,7 +14,20 @@
             "type": "PowerShell",
             "request": "launch",
             "script": "${workspaceFolder}/start.ps1",
-            "args": ["-ConfigurationFilePath", "./test/config_linux.json"],
+            "args": ["-ConfigurationFilePath", "./test/config_linux.jsonc"],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "(Linux)PowerShell: Test service",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "Start-VoiceActorRadioDownloaderService",
+            "args": [
+                "-ConfigurationFilePath",
+                "./test/config_linux.jsonc",
+                "-InvokeHour",
+                "15"
+            ],
             "cwd": "${workspaceFolder}"
         }
     ]
