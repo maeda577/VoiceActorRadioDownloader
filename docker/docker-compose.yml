@@ -1,0 +1,41 @@
+---
+services:
+  vard:
+    container_name: VoiceActorRadioDownloader
+    build:
+      context: https://github.com/maeda577/VoiceActorRadioDownloader.git
+      dockerfile: Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+    command:
+      - Start-VoiceActorRadioDownloaderService
+      - -ConfigurationFilePath
+      - /vard/conf.json
+      - -InvokeHour
+      - "10"    # ダウンロードを実行する時間(午前10時)
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: vard_contents
+        target: /vard
+    # ログ設定周りは好みで
+    # logging:
+    #   driver: journald
+  httpd:
+    container_name: httpd_vard
+    image: httpd:latest
+    restart: unless-stopped
+    ports:
+      - target: 80
+        published: 8080   # 公開するポート番号
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: volume
+        source: vard_contents
+        target: /usr/local/apache2/htdocs/
+        read_only: true
+        volume:
+          nocopy: true
+volumes:
+  vard_contents:
