@@ -61,3 +61,30 @@
     # Podcast用RSS更新
     Get-ChildItem -Path $config.DestinationPath -Filter "info.json" -File -Recurse | Update-RadioFeed -DestinationPath $config.DestinationPath -PodcastBaseUrl $config.PodcastBaseUrl -FfprobePath $FfprobePath
 }
+
+function Start-VoiceActorRadioDownloaderService {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [String]
+        [ValidateScript( { Test-Path $_ })]
+        $ConfigurationFilePath,
+
+        [int]
+        [ValidateScript( { ($_ -ge 0) -and ($_ -le 23) })]
+        $InvokeHour = 0
+    )
+
+    while ($true) {
+        $now = Get-Date
+        # 次の実行予定時刻
+        $nextInvokeDate = $now.Date.AddHours($InvokeHour)
+        # 予定時刻を過ぎていたら1日進める
+        if ($now -gt $nextInvokeDate) {
+            $nextInvokeDate = $nextInvokeDate.AddDays(1)
+        }
+        # 待機してから実行
+        Start-Sleep -Seconds ($nextInvokeDate - $now).TotalSeconds.ToInt32($null)
+        Start-VoiceActorRadioDownloader -ConfigurationFilePath $ConfigurationFilePath -ErrorAction Stop -WhatIf:$WhatIfPreference
+    }
+}
