@@ -11,7 +11,7 @@
     $config = Get-Content -Path $ConfigurationFilePath -Encoding UTF8 | ConvertFrom-Json
 
     if ((Test-Path $config.DestinationPath) -eq $false) {
-        throw "DestinationPath is not exists"
+        Write-Error -Message "DestinationPath is not exists" -ErrorAction Stop
     }
 
     $FfmpegPath = $config.Ffmpeg.FfmpegPath
@@ -84,6 +84,7 @@ function Start-VoiceActorRadioDownloaderService {
             $nextInvokeDate = $nextInvokeDate.AddDays(1)
         }
         # 待機してから実行
+        Write-Information -MessageData "Next invoke time is $nextInvokeDate. Sleeping."
         Start-Sleep -Seconds ($nextInvokeDate - $now).TotalSeconds.ToInt32($null)
         Start-VoiceActorRadioDownloader -ConfigurationFilePath $ConfigurationFilePath -ErrorAction Stop -WhatIf:$WhatIfPreference
     }
