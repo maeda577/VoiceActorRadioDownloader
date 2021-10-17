@@ -10,17 +10,19 @@ services:
     command:
       - Start-VoiceActorRadioDownloaderService
       - -ConfigurationFilePath
-      - /vard/conf.json
+      - /vard/conf.jsonc
       - -InvokeHour
       - "10"    # ダウンロードを実行する時間(午前10時)
+      - 6>&1    # Informationストリームを標準出力にリダイレクトする
     restart: unless-stopped
     volumes:
       - type: volume
         source: vard_contents
-        target: /vard
-    # ログ設定周りは好みで
-    # logging:
-    #   driver: journald
+        target: /vard/data
+      - type: bind
+        source: ./conf.jsonc      # 作成したconfigのホスト側パス
+        target: /vard/conf.jsonc
+        read_only: true
   httpd:
     container_name: httpd_vard
     image: httpd:latest

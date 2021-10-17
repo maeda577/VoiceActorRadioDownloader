@@ -9,5 +9,3 @@ RUN apt update && \
     mkdir /vard
 
 ENTRYPOINT ["pwsh", "-Command"]
-
-CMD ["Start-VoiceActorRadioDownloaderService", "-ConfigurationFilePath", "/vard/conf.json"]
