@@ -1,9 +1,8 @@
-﻿$headers = @{
+﻿Import-Module -Force -Name $PSScriptRoot/Common.psm1
+$headers = @{
     'X-Requested-With' = 'XMLHttpRequest';
 }
 $bonus_part_name = '楽屋裏'
-
-$culture = [System.Globalization.CultureInfo]::GetCultureInfo("ja-jp")
 
 function Get-PlaylistUrl {
     Param(
@@ -83,7 +82,7 @@ function Save-HibikiRadioEpisode {
     )
     process {
         # 公開日
-        $publishDate = [System.DateTimeOffset]::ParseExact($Program.episode.updated_at, "yyyy/MM/dd HH:mm:ss", $culture)
+        $publishDate = [System.DateTimeOffset]::ParseExact($Program.episode.updated_at, "yyyy/MM/dd HH:mm:ss", ([Globalization.CultureInfo]::GetCultureInfo("ja-jp")))
 
         if ($IsBonus) {
             # ファイル名(拡張子無し)

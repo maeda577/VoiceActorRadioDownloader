@@ -4,8 +4,9 @@
 
 ``` jsonc
 // configサンプル
-// コメントは例示のためです。jsonではコメントを使用できません。
+// コメントは例示のためです。WindowsのPowerShell 5系ではコメントを使用できません。
 // 実際のconfigファイルでは全てのコメントを削除してください。
+// PowerShell Coreではコメントありでも問題ありません。
 {
     // 響用の設定。不要な場合はHibiki以下を丸ごと削除
     "Hibiki": {
@@ -59,8 +60,11 @@
     "DestinationPath": "/var/www/html",
     // 実行環境がWindowsの場合、以下のようにエスケープしながら指定
     // "DestinationPath": "C:\\Inetpub\\wwwroot\\"
+    // Dockerで実行する場合は以下の通り
+    // "DestinationPath": "/vard/data",
+
     // Podcastを配信するWebサーバのルートURL
-    "PodcastBaseUrl": "http://localhost/",
+    "PodcastBaseUrl": "http://localhost:8080/",
     // ffmpegとffprobeのパス。どちらもPATHが通っていれば空文字のままでOK
     "Ffmpeg": {
         "FfmpegPath": "",
