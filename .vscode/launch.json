@@ -26,7 +26,8 @@
                 "-ConfigurationFilePath",
                 "./test/config_linux.jsonc",
                 "-InvokeHour",
-                "15"
+                "15",
+                "6>&1"
             ],
             "cwd": "${workspaceFolder}"
         }
