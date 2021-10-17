@@ -16,9 +16,6 @@ cd ~/vard
 wget https://raw.githubusercontent.com/maeda577/VoiceActorRadioDownloader/main/docker/docker-compose.yml
 vi ./docker-compose.yml
 
-# コンテナとボリュームを作成し起動はしない
-docker-compose up --no-start
-
 # コンフィグ作成
 # コンフィグ名を変える場合はdocker-compose.ymlも修正
 vi ~/vard/conf.jsonc
