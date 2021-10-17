@@ -1,5 +1,5 @@
 ## これは何
-響 -HiBiKi Radio Station- を保存するPowerShellである [CannoHarito/save-hibiki-radio.bat](https://gist.github.com/CannoHarito/75acd6ac09edfa93b54864bdd6b4df3e) を独自に拡張したものです。ラジオを保存しつつPodcast用のXMLを出力するので、iPhoneのPodcastアプリで聴けるようになります。ついでに音泉にも対応しています。
+響 -HiBiKi Radio Station- を保存するPowerShellである [CannoHarito/save-hibiki-radio.bat](https://gist.github.com/CannoHarito/75acd6ac09edfa93b54864bdd6b4df3e) を独自に拡張したものです。ラジオを保存しつつPodcast用のXMLを出力するので、別途Webサーバを立てることで各種Podcastアプリでも聴けるようになります。
 
 ## おやくそく
 * 作成したサーバは外部に公開しないでください
@@ -38,6 +38,7 @@
 ## インストール方法
 * [Ubuntu 20.04 向け手順](./docs/setup_ubuntu.md)
 * [Windows10 向け手順](./docs/setup_windows.md)
+* [Docker 向け手順](./docs/setup_docker.md)
 
 ## 設定ファイルの作成
 [設定ファイルサンプル](./docs/conf.md)を元にうまいこと設定してください。
