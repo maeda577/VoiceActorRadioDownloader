@@ -11,7 +11,7 @@ trim_trailing_whitespace = true
 # https://github.com/editorconfig/editorconfig-vscode
 charset = utf-8
 
-[*.{ps1,psm1}]
+[*.{ps1,psm1,psd1}]
 charset = utf-8-bom
 
 [*.{yml,yaml}]
