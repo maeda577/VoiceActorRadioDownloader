@@ -21,7 +21,7 @@ vi ./docker-compose.yml
 vi ~/vard/conf.jsonc
 
 # コンテナ起動
-docker-compose up --detach
+sudo docker-compose up --detach
 ```
 
 * http://<DockerホストのIPアドレス>:8080/ へアクセスしindexが見られることを確認
@@ -35,11 +35,11 @@ docker-compose up --detach
 cd ~/vard
 
 # イメージの再ビルド
-docker-compose build --pull vard
+sudo docker-compose build --pull vard
 # apacheを更新する場合はpull
-docker-compose pull httpd
+sudo docker-compose pull httpd
 
 # コンテナ再作成
-dokcer-compose down
-dokcer-compose up --detach
+sudo dokcer-compose down
+sudo dokcer-compose up --detach
 ```
