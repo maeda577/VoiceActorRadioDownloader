@@ -24,7 +24,7 @@ vi ~/vard/conf.jsonc
 docker-compose up --detach
 ```
 
-* http://localhost:8080/ へアクセスしindexが見られることを確認
+* http://<DockerホストのIPアドレス>:8080/ へアクセスしindexが見られることを確認
 * 翌日もう一回見てPodcastが出来ている事を確認
     * なにかおかしい場合は`docker exec -it VoiceActorRadioDownloader bash`で中身を見る
 
