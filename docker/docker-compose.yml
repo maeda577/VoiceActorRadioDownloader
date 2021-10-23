@@ -3,7 +3,8 @@ services:
   vard:
     container_name: VoiceActorRadioDownloader
     build:
-      context: https://github.com/maeda577/VoiceActorRadioDownloader.git
+      # バージョン指定する場合は末尾の #main を #v0.6.1 などタグ名にする
+      context: https://github.com/maeda577/VoiceActorRadioDownloader.git#main
       dockerfile: Dockerfile
     environment:
       TZ: Asia/Tokyo
