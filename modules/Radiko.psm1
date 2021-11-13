@@ -124,7 +124,7 @@ function Save-Radiko {
         $programUrl = "https://radiko.jp/v3/program/station/weekly/$StationId.xml"
         $programXml = [xml](Invoke-RadikoRequest($programUrl))
 
-        $dateNowStr = (Get-Date -AsUTC).AddHours(9).ToString("yyyyMMddHHmmss")
+        $dateNowStr = [System.DateTimeOffset]::UtcNow.AddHours(9).ToString("yyyyMMddHHmmss")
 
         $targetPrograms = $programXml.radiko.stations.station.progs |
         Select-Object -ExpandProperty prog | #放送情報が日付別に入っているのを全部フラットにする
