@@ -15,12 +15,12 @@ function Get-EpisodeInfoFromPlaylist {
     # 一旦プレイリストに入れてから一覧を取得し外す(プレイリスト経由だと得られる情報がちょっと増えるため)
     $postPlaylist = @{ "program_id" = $ProgramId; "episode_id" = $EpisodeId }
     $response = Invoke-RestMethod -Method Post -Uri "https://agonp.jp/api/v2/playlists/add_episode/0.json" -Body $postPlaylist -WebSession $WebSession
-    if ($null -ne $response.data.error) {
+    if ([System.String]::IsNullOrWhiteSpace($response.data.error) -eq $false ) {
         Write-Error -Message $response.data.error
     }
     $playlists = Invoke-RestMethod -Uri "https://agonp.jp/api/v2/episodes/others.json?in_playlist=1" -WebSession $WebSession
     $response = Invoke-RestMethod -Method Post -Uri "https://agonp.jp/api/v2/playlists/remove_episode/0.json" -Body $postPlaylist -WebSession $WebSession
-    if ($null -ne $response.data.error) {
+    if ([System.String]::IsNullOrWhiteSpace($response.data.error) -eq $false ) {
         Write-Error -Message $response.data.error
     }
     return $playlists.data.episodes | Where-Object -Property id -EQ $EpisodeId
@@ -123,8 +123,9 @@ function Invoke-DownloadAgonp {
                 # プレイリスト経由で放送の追加情報を取得
                 $episodeInfoPL = Get-EpisodeInfoFromPlaylist -ProgramId $Program.ProgramId -EpisodeId $episodeId -WebSession $webSession
 
-                # 公開日
-                $publishDate = Get-Date -UnixTimeSeconds $episodeInfoPL.will_published_from
+                # 公開日(UTCとJST)
+                $publishDateUTC = [System.DateTimeOffset]::FromUnixTimeSeconds($episodeInfoPL.will_published_from)
+                $publishDate = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId($publishDateUTC, "Asia/Tokyo")
 
                 # タグ書き込み後のオーディオファイルを置く一時ファイル
                 $tempAudioFileFullPath = Join-Path -Path $outputSubDir.FullName -ChildPath "temp_$audioFileName"
