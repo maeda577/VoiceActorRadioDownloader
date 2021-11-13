@@ -58,6 +58,11 @@
         $config.RadioTalk.ProgramIds | Save-RadioTalk -DestinationPath $config.DestinationPath -FfmpegPath $FfmpegPath 6>&1
     }
 
+    # AG-ON Premiumのダウンロード
+    if ($config.Agonp.Programs -and $config.Agonp.Email -and $config.Agonp.Password) {
+        $config.Agonp.Programs | Invoke-DownloadAgonp -DestinationPath $config.DestinationPath -Email $config.Agonp.Email -Password $config.Agonp.Password -FfmpegPath $FfmpegPath 6>&1
+    }
+
     # Podcast用RSS更新
     Get-ChildItem -Path $config.DestinationPath -Filter "info.json" -File -Recurse | Update-RadioFeed -DestinationPath $config.DestinationPath -PodcastBaseUrl $config.PodcastBaseUrl -FfprobePath $FfprobePath
 }

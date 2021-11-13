@@ -4,9 +4,9 @@
 
 ``` jsonc
 // configサンプル
-// コメントは例示のためです。WindowsのPowerShell 5系ではコメントを使用できません。
-// 実際のconfigファイルでは全てのコメントを削除してください。
+// WindowsのPowerShell 5系ではコメントを使用できません。実際のconfigファイルでは全てのコメントを削除してください。
 // PowerShell Coreではコメントありでも問題ありません。
+// LinuxではCoreしか入らないのでコメントは常に有効です。
 {
     // 響用の設定。不要な場合はHibiki以下を丸ごと削除
     "Hibiki": {
@@ -55,6 +55,33 @@
         "ProgramIds": [
             "82485"
         ]
+    },
+    // AG-ON Premium用の設定。不要な場合はAgonp以下を丸ごと削除
+    "Agonp": {
+        // ダウンロードする放送情報
+        // カンマ区切り
+        "Programs": [
+            {
+                // ダウンロードしたい放送の https://agonp.jp/programs/view/<ここの文字列>
+                "ProgramId": "42",
+                // 以下SizeとTypeは、放送を再生するページにあるドロップダウンで選べる画質指定相当のパラメータ。いずれかを指定
+                // 高画質: large
+                // 低画質: small
+                "Size": "large",
+                // 動画ごとダウンロードするか音声のみか。いずれかを指定
+                // 動画あり: mp4
+                // 音声のみ: mp3
+                "Type": "mp4"
+            },
+            {
+                "ProgramId": "245",
+                "Size": "small",
+                "Type": "mp3"
+            }
+        ],
+        // AG-ON Premiumのログインメールアドレスとパスワード。必須
+        "Email": "your-email-address@example.com",
+        "Password": "your-Password01"
     },
     // 保存先フォルダ名。事前に作成しておく必要あり
     "DestinationPath": "/var/www/html",
