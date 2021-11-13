@@ -14,6 +14,10 @@
     * エリアフリーは非対応です。
 * [RadioTalk](https://radiotalk.jp/)
     * 放送によっては既にPodcastとして公開されているものがあります。公開済みの場合はそちらを参照してください。
+* [AG-ON Premium](https://agonp.jp/)
+    * アカウントは必須です。事前に作成してください。
+    * 処理中にプレイリスト機能を使用します。最低1つはプレイリストの空きを確保してください。
+    * 無料放送のみテストしています。有料放送のダウンロードが可能かどうかは未検証です。
 
 ## 必要なもの
 * PowerShellが動作する環境。以下で検証しています
@@ -21,19 +25,17 @@
     * Windows10 + PowerShell 5.1
 * 響のダウンロードしたい放送の access_id
     * 放送のURLを開き `https://hibiki-radio.jp/description/<ここの文字列>/detail` を調べておいてください
-    * 複数指定可能です
 * 音泉のダウンロードしたい放送の directory_name
     * 放送のURLを開き `https://www.onsen.ag/program/<ここの文字列>` を調べておいてください
-    * 複数指定可能です
     * 響のaccess_idと音泉のdirectory_nameで同じものを指定すると多分うまく動きません
         * 例：llssを両方で指定すると、同じディレクトリに2つの配信サイトのmp4が保存されrssがよく分からない感じになります
 * Radikoのダウンロードしたい放送の放送局station_idとタイトル
     * 放送のURLを開き `https://radiko.jp/#!/ts/<ここの文字列>/20210516223000` がstation_idです
     * 合わせて放送タイトルが必要なので同じURLから確認してください。ワイルドカードでの指定も可能です
-    * 複数指定可能です
 * RadioTalkのダウンロードしたい放送の program_id
     * 放送のURLを開き `https://radiotalk.jp/program/<ここの文字列>` を調べておいてください
-    * 複数指定可能です
+* AG-ON Premiumのダウンロードしたい放送の program_id
+    * 放送のURLを開き `https://agonp.jp/programs/view/<ここの文字列>` を調べておいてください
 
 ## インストール方法
 * [Ubuntu 20.04 向け手順](./docs/setup_ubuntu.md)

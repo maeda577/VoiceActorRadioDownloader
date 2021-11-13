@@ -6,7 +6,7 @@
     RootModule = 'VoiceActorRadioDownloader.psm1'
 
     # Version number of this module.
-    ModuleVersion = '0.6.1'
+    ModuleVersion = '0.7.0'
 
     # Supported PSEditions
     CompatiblePSEditions = @('Desktop', 'Core')
@@ -61,6 +61,7 @@
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     NestedModules = @(
+        'Agonp.psm1',
         'Hibiki.psm1',
         'Onsen.psm1',
         'Podcast.psm1',

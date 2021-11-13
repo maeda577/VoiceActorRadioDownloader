@@ -31,11 +31,15 @@ function Invoke-DownloadItemIfNotExists {
 
         [Parameter(Mandatory = $true)]
         [String]
-        $OutFile
+        $OutFile,
+
+        [Parameter()]
+        [Microsoft.PowerShell.Commands.WebRequestSession]
+        $WebSession
     )
     if ((Test-Path $OutFile) -eq $false) {
         if ($PSCmdlet.ShouldProcess($OutFile, "Download")) {
-            $null = Invoke-WebRequest -Method Get -Uri $Uri -OutFile $OutFile -UseBasicParsing
+            $null = Invoke-WebRequest -Method Get -Uri $Uri -OutFile $OutFile -UseBasicParsing -WebSession $WebSession
             Write-Information -MessageData "File Downloaded: $([System.IO.Path]::GetFullPath($OutFile))"
         }
         return $true
@@ -43,4 +47,37 @@ function Invoke-DownloadItemIfNotExists {
     else {
         return $false
     }
+}
+
+function Set-PodcastInfoFile {
+    [CmdletBinding(SupportsShouldProcess)]
+    param (
+        [Parameter(Mandatory = $true)]
+        [ValidateScript( { Test-Path $_ })]
+        [String]
+        $DestinationDirectory,
+        [Parameter(Mandatory = $true)]
+        [String]
+        $Title,
+        [Parameter()]
+        [String]
+        $Description,
+        [Parameter()]
+        [String]
+        $ImageFileName,
+        [Parameter()]
+        [String]
+        $SiteUri,
+        [Parameter()]
+        [String]
+        $Copyright
+    )
+    $infoFullPath = Join-Path -Path $DestinationDirectory -ChildPath "info.json"
+    @{
+        "title" = $Title;
+        "description" = $Description;
+        "image" = $ImageFileName;
+        "link" = $SiteUri;
+        "copyright" = $Copyright;
+    } | ConvertTo-Json | Out-File -FilePath $infoFullPath -Encoding UTF8 -WhatIf:$WhatIfPreference
 }

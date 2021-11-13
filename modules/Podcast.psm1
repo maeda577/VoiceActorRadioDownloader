@@ -1,6 +1,6 @@
 ﻿$feed_name = "feed.rss"
 
-$audioExtensions = @(".m4a", ".mp4")
+$audioExtensions = @(".m4a", ".mp4", ".mp3")
 $imageExtensions = @(".jpg", ".jpeg", ".png", ".webp")
 
 function Update-RadioFeed {
