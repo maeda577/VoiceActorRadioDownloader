@@ -6,6 +6,7 @@ $postHeaders = @{
 }
 
 function Connect-OnsenPremium {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSAvoidUsingPlainTextForPassword', 'Password')]
     param (
         [Parameter(mandatory = $true)]
         [String]
@@ -123,7 +124,7 @@ function Save-OnsenRadioEpisode {
             $comment = ($program.current_episode.comments | ForEach-Object { $_.caption + $_.body }) -join "`r`n"
             # 画像もダウンロード
             if ($program.current_episode.update_images[0].image.url) {
-                $imagePath = Join-Path -Path $output_sub_dir -ChildPath ($filename.Split(".")[0] + ".png")
+                $imagePath = Join-Path -Path $EpisodeDestinationPath -ChildPath ($filename.Split(".")[0] + ".png")
                 if ((Test-Path $imagePath) -eq $false) {
                     Invoke-WebRequest -Method Get -Uri $program.current_episode.update_images[0].image.url -OutFile $imagePath -UseBasicParsing > $null
                 }
@@ -141,7 +142,7 @@ function Save-OnsenRadioEpisode {
         }
 
         # 出力ファイルのフルパス
-        $fileFullPath = Join-Path -Path $output_sub_dir -ChildPath $filename
+        $fileFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath $filename
 
         # ffmpegの引数
         $ffmepg_arg = @(
