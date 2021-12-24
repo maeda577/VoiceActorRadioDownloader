@@ -1,6 +1,6 @@
 {
     "name": "PowerShell",
-    "image": "mcr.microsoft.com/powershell:latest",
+    "image": "docker.io/library/debian:bullseye",
     "containerEnv": {
         "TZ": "Asia/Tokyo"
     },
@@ -8,5 +8,5 @@
         "ms-vscode.powershell",
         "EditorConfig.EditorConfig"
     ],
-    "postCreateCommand": "apt update && apt --yes install git ffmpeg"
+    "postCreateCommand": "sh .devcontainer/post-create.sh"
 }
