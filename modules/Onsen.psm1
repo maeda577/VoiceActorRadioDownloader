@@ -146,7 +146,8 @@ function Save-OnsenRadioEpisode {
 
         # ffmpegの引数
         $ffmepg_arg = @(
-            "-i", "`"$($content.streaming_url)`""     #input file url
+            "-headers", "`"Referer: https://www.onsen.ag/`"",
+            "-i", "`"$($content.streaming_url)`"",     #input file url
             "-loglevel", "error", #Show all errors, including ones which can be recovered from.
             "-acodec", "copy", #Set the audio codec.
             "-vcodec", "copy", #Set the video codec.
@@ -166,7 +167,7 @@ function Save-OnsenRadioEpisode {
 
         # ダウンロード実行
         if ((Test-Path -Path $fileFullPath) -eq $false) {
-            Start-Process -FilePath $ffmpegPath -ArgumentList $ffmepg_arg -Wait
+            Start-Process -FilePath $FfmpegPath -ArgumentList $ffmepg_arg -Wait
         }
     }
 }

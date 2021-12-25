@@ -4,7 +4,7 @@ DockerとDockerCompose導入済の環境での実行方法です。Ubuntu20.04�
 
 ## コンテナ構築
 * コンテナ内にffmpegをインストールするため、`dokcer-compose up`でそれなりの時間がかかります
-* conf.jsoncの中身は[設定ファイル詳細](./conf.md)を参照してください
+* conf.jsoncの中身は[設定ファイルサンプル](./conf.jsonc)を参照してください
 
 ``` shell
 # 作業ディレクトリ作成

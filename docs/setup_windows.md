@@ -14,7 +14,7 @@ cd ./VoiceActorRadioDownloader-0.5
 ```
 
 ## 設定
-* [設定ファイルサンプル](./conf.md)を元にうまいこと設定してください。
+* [設定ファイルサンプル](./conf.jsonc)を元にうまいこと設定してください。
 ``` powershell
 # サンプルconfigをコピー
 Copy-Item -Path ./config.sample.json -Destination ./config.json
