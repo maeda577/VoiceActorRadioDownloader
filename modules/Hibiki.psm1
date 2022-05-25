@@ -108,7 +108,13 @@ function Save-HibikiRadioEpisode {
         }
 
         # 第何回放送か
-        $track = (Select-String -InputObject $Program.episode.name -Pattern "[0-9]+").Matches[0].Value
+        $trackMatch = Select-String -InputObject $Program.episode.name -Pattern "[0-9]+"
+        if ($trackMatch) {
+            $track = $trackMatch.Matches[0].Value
+        }
+        else {
+            $track = 0
+        }
 
         # 出力ファイルのフルパス
         $fileFullPath = Join-Path -Path $EpisodeDestinationPath -ChildPath ($filenameBase + ".m4a")
