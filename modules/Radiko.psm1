@@ -166,7 +166,7 @@ function Save-Radiko {
                 "-metadata", "genre=`"Web Radio`"",
                 "-metadata", "date=`"$($startTime.Year)`"",
                 "-metadata", "creation_time=`"$($startTime.ToString('u'))`"",
-                "-metadata", "description=`"$($targetProgram.info)`"",
+                # "-metadata", "description=`"$($targetProgram.info)`"",
                 "-metadata", "comment=`"$($targetProgram.desc)`"",
                 "-metadata", "title=`"$($targetProgram.title)`"", # タイトル
                 "`"$fileFullPath`""   # 出力ファイルのフルパス
