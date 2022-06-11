@@ -111,7 +111,13 @@ function Save-OnsenRadioEpisode {
         $performers = $program.performers | Select-Object -ExpandProperty "name"
 
         # 第〇〇回、の数字部分
-        $track = (Select-String -InputObject $content.title -Pattern "[0-9]+").Matches[0].Value
+        $trackMatch = Select-String -InputObject $content.title -Pattern "[0-9]+"
+        if ($trackMatch) {
+            $track = $trackMatch.Matches[0].Value
+        }
+        else {
+            $track = 0
+        }
 
         # streamのURLの後ろから2つ目のセグメントがファイル名になっている
         $url_segment = $content.streaming_url -split "/"
