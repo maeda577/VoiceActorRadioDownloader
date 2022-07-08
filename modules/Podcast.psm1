@@ -85,6 +85,8 @@ function Update-RadioFeed {
             if ($metadata.format.tags.comment) {
                 $itemNode.description = $metadata.format.tags.comment
             }
+            # 放送時間(端数があれば四捨五入)
+            $itemNode.duration = [int]$metadata.format.duration
 
             # 放送日があればRFC1123形式で入れる
             if ($metadata.format.tags.creation_time) {
